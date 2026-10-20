@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import TaskModal from './TaskModal';
 import { getDeadline } from './deadline';
+import DeliverablesBoard, { INITIAL_ANCHORS } from './DeliverablesBoard';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -163,8 +164,14 @@ export default function App() {
     setEditing(null);
   }
 
-  // TODO M11 anchors:
-  //   const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', [...]);
+  const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', INITIAL_ANCHORS);
+
+  function saveAnchor(id, url) {
+    setAnchors((current) => INITIAL_ANCHORS.map((definition) => ({
+      ...definition,
+      url: definition.id === id ? url : current.find((anchor) => anchor.id === definition.id)?.url ?? null,
+    })));
+  }
 
   return (
     <div className="min-h-screen bg-surface-page p-6 font-sans text-text-primary">
@@ -184,7 +191,7 @@ export default function App() {
         </button>
       </header>
 
-      {/* TODO M11 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
+      <DeliverablesBoard anchors={anchors} onSave={saveAnchor} />
 
       <main aria-label="Task board" className="overflow-x-auto">
         <div className="grid min-w-[960px] grid-cols-4 gap-6">
