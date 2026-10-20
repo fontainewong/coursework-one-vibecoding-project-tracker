@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import TaskModal from './TaskModal';
+import { getDeadline } from './deadline';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -122,6 +123,17 @@ export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
   // null closes the modal; { task: null } starts a new task.
   const [editing, setEditing] = useState(null);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const refresh = () => setNow(new Date());
+    const timer = window.setInterval(refresh, 30_000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
 
   function saveTask(fields) {
     const today = new Date();
@@ -184,9 +196,11 @@ export default function App() {
                   </p>
                 ) : (
                   <ul className="space-y-4">
-                    {stageTasks.map((task) => (
+                    {stageTasks.map((task) => {
+                      const deadline = getDeadline(task, now);
+                      return (
                       <li key={task.id}>
-                        <article className={`rounded-lg border border-l-[3px] border-due-neutral bg-surface-card p-4 hover:shadow-sm ${
+                        <article className={`rounded-lg border border-l-[3px] border-due-neutral p-4 hover:shadow-sm ${deadline.tint} ${
                           task.type === 'bug' ? 'border-l-type-bug' : 'border-l-type-feature'
                         }`}>
                           <p className="mb-2 font-mono text-xs text-text-muted">
@@ -204,9 +218,11 @@ export default function App() {
                             <span className="sr-only">Assignee: </span>
                             {task.assignee?.trim() || 'Unassigned'}
                           </span>
+                          <p className="mt-3 text-xs leading-relaxed text-text-primary">{deadline.label}</p>
                         </article>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 )}
               </section>
