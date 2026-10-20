@@ -162,6 +162,33 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 - The "Copy as Prompt Context" demo works on stage.
 - 5 min pitch is rehearsed.
 
----
+
+## Project requirements
+
+### Functional requirements
+- FR01:	The system shall allow users to create, view, edit and delete project tasks.
+- FR02:	The system shall display tasks on a Kanban board and allow users to change their status between To Do, In Progress, Review and Done.
+- FR03:	The system shall allow users to assign and reassign tasks to team members.
+- FR04:	The system shall allow users to set task due dates and identify approaching and overdue tasks.
+- FR05:	The system shall allow users to record and edit useful AI prompts, their results and supporting context against a task.	
+- FR06:	The system shall allow users to copy a task’s details and saved context as formatted text for reuse in an AI tool.
+- FR07:	The system shall allow users to record project milestones and track whether they have been completed.	
+- FR08:	The system shall require users to sign in before accessing a team’s board and restrict access to authorised team members.
+- FR09:	The system shall allow users to add members to the project team.
+- FR10:	The system shall allow a team to manage multiple projects.
+
+### Non-functional requirements
+- NFR01: Accessibility	All core task-management actions shall be usable with a keyboard, with visible focus indicators and labelled controls.
+- NFR02: Visual clarity	Task types and due-date states shall be communicated through text or icons as well as colour.
+- NFR03: Usability	Forms shall clearly identify required fields, explain validation errors and preserve entered information when validation fails.
+- NFR04: Persistence	Saved tasks and their associated context shall remain available after refreshing or reopening the application in the supported storage environment.
+- NFR05: Access control	Access restrictions shall be enforced wherever protected project data is stored or served, rather than relying only on hiding interface elements.
+
+### Data requirements
+- DR01: Each task shall store a unique ID, title, description, type, status, assignee, creation date and optional due date. 
+- DR02: Each task shall retain its AI prompts, results and supporting context, with an optional AI tool name and a last-updated timestamp.
+- DR03: Each team-member record shall store a unique ID, name, email address and GitHub username.
+- DR04: Each project milestone shall store a unique ID, title, optional target date and completion status. 
+- DR05: Tasks, milestones and team memberships shall be associated with the relevant project or team using stable identifiers. 
 
 *PRD version: hackathon-starter v1 · maintained by Prof. Dr. Ignacio Alvarez*
