@@ -71,14 +71,13 @@ function AnchorEditor({ anchor, onSave }) {
 
 export default function DeliverablesBoard({ anchors, onSave }) {
   return (
-    <details className="mb-8 rounded-xl border border-due-neutral bg-surface-card p-4 sm:p-6">
-      <summary className="cursor-pointer list-none rounded-sm text-base font-semibold uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary [&::-webkit-details-marker]:hidden">Deliverables</summary>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section aria-label="Deliverables" className="mb-8 rounded-xl border border-due-neutral bg-surface-card p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {INITIAL_ANCHORS.map((definition) => {
           const saved = anchors.find((anchor) => anchor.id === definition.id);
           return <AnchorEditor key={definition.id} anchor={{ ...definition, url: saved?.url ?? null }} onSave={onSave} />;
         })}
       </div>
-    </details>
+    </section>
   );
 }

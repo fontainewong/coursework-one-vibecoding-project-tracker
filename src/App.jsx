@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import TaskModal from './TaskModal';
 import { getDeadline } from './deadline';
 import DeliverablesBoard, { INITIAL_ANCHORS } from './DeliverablesBoard';
+import TaskCalendar from './TaskCalendar';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -127,6 +128,8 @@ export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
   // null closes the modal; { task: null } starts a new task.
   const [editing, setEditing] = useState(null);
+  const [view, setView] = useState('board');
+  const [deliverablesOpen, setDeliverablesOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -191,9 +194,24 @@ export default function App() {
         </button>
       </header>
 
-      <DeliverablesBoard anchors={anchors} onSave={saveAnchor} />
-
-      <main aria-label="Task board" className="overflow-x-auto">
+      <div role="group" aria-label="Board controls" className="mb-4 flex flex-wrap gap-2">
+        {['board', 'calendar'].map((option) => (
+          <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}
+            className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${view === option ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card text-text-primary'}`}>
+            {option}
+          </button>
+        ))}
+        <button type="button" aria-expanded={deliverablesOpen} aria-controls="deliverables-panel"
+          onClick={() => setDeliverablesOpen((open) => !open)}
+          className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${deliverablesOpen ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card text-text-primary'}`}>
+          Deliverables
+        </button>
+      </div>
+      <div id="deliverables-panel" hidden={!deliverablesOpen}>
+        <DeliverablesBoard anchors={anchors} onSave={saveAnchor} />
+      </div>
+      <main aria-label={view === 'board' ? 'Task board' : 'Task calendar'} className="overflow-x-auto">
+        {view === 'calendar' ? <TaskCalendar tasks={tasks} today={now} onEdit={(task) => setEditing({ task })} /> : (
         <div className="grid min-w-[960px] grid-cols-4 gap-6">
           {STAGES.map((stage) => {
             const stageTasks = tasks.filter((task) => task.status === stage.id);
@@ -247,6 +265,7 @@ export default function App() {
             );
           })}
         </div>
+        )}
       </main>
       {editing && <TaskModal task={editing.task} stages={STAGES} team={TEAM}
         onSave={saveTask} onDelete={deleteTask} onClose={() => setEditing(null)} />}
