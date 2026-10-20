@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import TaskModal from './TaskModal';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -118,11 +119,27 @@ export function useLocalStorage(key, initialValue) {
 }
 
 export default function App() {
-  const [tasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
+  const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
+  // null closes the modal; { task: null } starts a new task.
+  const [editing, setEditing] = useState(null);
 
-  // TODO M5 crud-modal:
-  //   const [editing, setEditing] = useState(null);
-  //
+  function saveTask(fields) {
+    const today = new Date();
+    const createdDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const task = editing.task
+      ? { ...editing.task, ...fields }
+      : { ...fields, id: crypto.randomUUID(), createdDate };
+    setTasks((current) => editing.task
+      ? current.map((item) => item.id === task.id ? task : item)
+      : [...current, task]);
+    setEditing(null);
+  }
+
+  function deleteTask(id) {
+    setTasks((current) => current.filter((task) => task.id !== id));
+    setEditing(null);
+  }
+
   // TODO M11 anchors:
   //   const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', [...]);
 
@@ -138,15 +155,14 @@ export default function App() {
             Team starter
           </p>
         </div>
+        <button type="button" onClick={() => setEditing({ task: null })}
+          className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary">
+          Add Task
+        </button>
       </header>
 
       {/* TODO M11 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
 
-      {/*
-        TODO M5 crud-modal:
-          Add a "+" button that opens a modal with every Task field.
-          Clicking a card should open the same modal in edit mode.
-      */}
       <main aria-label="Task board" className="overflow-x-auto">
         <div className="grid min-w-[960px] grid-cols-4 gap-6">
           {STAGES.map((stage) => {
@@ -172,7 +188,13 @@ export default function App() {
                       <li key={task.id}>
                         <article className="rounded-lg border border-due-neutral bg-surface-card p-4 hover:shadow-sm">
                           <p className="mb-2 font-mono text-xs capitalize text-text-muted">{task.type}</p>
-                          <h3 className="text-sm font-medium">{task.title}</h3>
+                          <h3 className="text-sm font-medium">
+                            <button type="button" onClick={() => setEditing({ task })}
+                              className="text-left underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+                              aria-label={`Edit task: ${task.title}`}>
+                              {task.title}
+                            </button>
+                          </h3>
                           <p className="mt-2 text-sm leading-relaxed text-text-muted">{task.description}</p>
                         </article>
                       </li>
@@ -184,6 +206,8 @@ export default function App() {
           })}
         </div>
       </main>
+      {editing && <TaskModal task={editing.task} stages={STAGES} team={TEAM}
+        onSave={saveTask} onDelete={deleteTask} onClose={() => setEditing(null)} />}
     </div>
   );
 }
