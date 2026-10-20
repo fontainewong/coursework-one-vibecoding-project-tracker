@@ -33,6 +33,9 @@ import { getDeadline } from './deadline';
  * @property {string} assignee
  * @property {string|null} dueDate     ISO 'YYYY-MM-DD'
  * @property {string} createdDate      ISO 'YYYY-MM-DD'
+ * @property {string} context
+ * @property {string|null} contextTool
+ * @property {string|null} contextUpdatedAt ISO timestamp
  */
 
 // The four columns of the board, in render order.
@@ -137,10 +140,18 @@ export default function App() {
 
   function saveTask(fields) {
     const today = new Date();
+    const context = fields.context ?? '';
+    const contextTool = fields.contextTool || null;
+    const contextChanged = context !== (editing.task?.context ?? '') ||
+      contextTool !== (editing.task?.contextTool ?? null);
+    const contextUpdatedAt = contextChanged
+      ? today.toISOString()
+      : editing.task?.contextUpdatedAt ?? null;
+    const savedFields = { ...fields, context, contextTool, contextUpdatedAt };
     const createdDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const task = editing.task
-      ? { ...editing.task, ...fields }
-      : { ...fields, id: crypto.randomUUID(), createdDate };
+      ? { ...editing.task, ...savedFields }
+      : { ...savedFields, id: crypto.randomUUID(), createdDate };
     setTasks((current) => editing.task
       ? current.map((item) => item.id === task.id ? task : item)
       : [...current, task]);

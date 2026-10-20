@@ -9,6 +9,8 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
     status: task?.status ?? stages[0].id,
     assignee: task?.assignee ?? team[0] ?? '',
     dueDate: task?.dueDate ?? '',
+    context: task?.context ?? '',
+    contextTool: task?.contextTool ?? '',
   }));
   const [error, setError] = useState('');
 
@@ -38,7 +40,8 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
       event.currentTarget.elements.title.focus();
       return;
     }
-    onSave({ ...draft, title: draft.title.trim(), dueDate: draft.dueDate || null });
+    onSave({ ...draft, title: draft.title.trim(), dueDate: draft.dueDate || null,
+      contextTool: draft.contextTool || null });
   }
 
   const fieldClass = 'mt-1 w-full min-w-0 rounded-md border border-due-neutral bg-surface-card px-3 py-2 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary';
@@ -82,6 +85,24 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
           <label className="block" htmlFor="task-due-date">Due date (optional)
             <input type="date" id="task-due-date" name="dueDate" value={draft.dueDate} onChange={update} className={fieldClass} />
           </label>
+          <label className="block" htmlFor="task-context">Context / AI Briefing
+            <textarea id="task-context" name="context" rows={6} value={draft.context} onChange={update}
+              aria-describedby="task-context-help" className={`${fieldClass} resize-y font-mono text-sm`} />
+          </label>
+          <p id="task-context-help" className="text-xs leading-relaxed text-text-muted">
+            Keep useful prompts, results, decisions and next steps here. Select the text to copy it into your AI tool.
+          </p>
+          <label className="block" htmlFor="task-context-tool">AI Tool (optional)
+            <select id="task-context-tool" name="contextTool" value={draft.contextTool} onChange={update} className={fieldClass}>
+              <option value="">None</option>
+              {['Claude', 'ChatGPT', 'Cursor', 'Lovable', 'Replit', 'Other'].map((tool) => (
+                <option key={tool} value={tool}>{tool}</option>
+              ))}
+            </select>
+          </label>
+          {task?.contextUpdatedAt && <p className="text-xs text-text-muted">
+            Context last saved: <time dateTime={task.contextUpdatedAt}>{task.contextUpdatedAt}</time>
+          </p>}
           {task && <p className="text-xs text-text-muted">Created: <time dateTime={task.createdDate}>{task.createdDate}</time></p>}
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
