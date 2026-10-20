@@ -200,6 +200,10 @@ export default function App() {
                             </button>
                           </h3>
                           <p className="mt-2 text-sm leading-relaxed text-text-muted">{task.description}</p>
+                          <span className="mt-4 inline-block max-w-full whitespace-normal break-words rounded-md border border-due-neutral bg-surface-page px-2 py-1 text-xs leading-relaxed text-text-muted">
+                            <span className="sr-only">Assignee: </span>
+                            {task.assignee?.trim() || 'Unassigned'}
+                          </span>
                         </article>
                       </li>
                     ))}
