@@ -42,9 +42,53 @@ export const STAGES = [
   { id: 'done',        label: 'Done' },
 ];
 
-// Replace these placeholders with the three names from PRD §8 before M4.
-// They become the only valid values for `Task.assignee`.
-export const TEAM = ['Teammate A', 'Teammate B', 'Teammate C'];
+// Initial fictional team for M4, not a fixed team-size constraint.
+// Tasks retain assignee names as required by the locked Task model.
+export const TEAM = ['Maya Chen', 'Oliver Brooks', 'Priya Shah', 'Leo Martins'];
+
+/** @type {Task[]} */
+const INITIAL_TASKS = [
+  {
+    id: 'task-search-filters',
+    title: 'Add task search and filters',
+    description: 'Let developers find tasks by title and filter the board by task type.',
+    type: 'feature',
+    status: 'todo',
+    assignee: 'Maya Chen',
+    dueDate: '2026-10-26',
+    createdDate: '2026-10-19',
+  },
+  {
+    id: 'task-date-fix',
+    title: 'Fix date shifts across time zones',
+    description: 'Keep date-only deadlines on the selected day when displayed in different time zones.',
+    type: 'bug',
+    status: 'in-progress',
+    assignee: 'Oliver Brooks',
+    dueDate: '2026-10-23',
+    createdDate: '2026-10-18',
+  },
+  {
+    id: 'task-form-validation',
+    title: 'Validate the task creation form',
+    description: 'Check required titles and show clear validation messages without losing entered values.',
+    type: 'feature',
+    status: 'review',
+    assignee: 'Priya Shah',
+    dueDate: '2026-10-22',
+    createdDate: '2026-10-17',
+  },
+  {
+    id: 'task-ci-build',
+    title: 'Set up automated build checks',
+    description: 'Run the production build on pull requests so broken changes are caught before merging.',
+    type: 'feature',
+    status: 'done',
+    assignee: 'Leo Martins',
+    dueDate: null,
+    createdDate: '2026-10-16',
+  },
+];
 
 /**
  * A tiny localStorage hook — survives reloads, no library needed.
@@ -74,9 +118,8 @@ export function useLocalStorage(key, initialValue) {
 }
 
 export default function App() {
-  // TODO M4 data-model:
-  //   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', [/* 3-4 seed tasks */]);
-  //
+  const [tasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
+
   // TODO M5 crud-modal:
   //   const [editing, setEditing] = useState(null);
   //
@@ -84,13 +127,13 @@ export default function App() {
   //   const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', [...]);
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen bg-surface-page p-6 font-sans text-text-primary">
       <header className="mb-6 flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Vibecoding Project Tracker
+          <h1 className="text-2xl font-semibold text-brand-primary">
+            Project Tracker
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="mt-1 text-sm text-text-muted">
             {/* Replace this line with your team name from PRD §11. */}
             Team starter
           </p>
@@ -100,17 +143,46 @@ export default function App() {
       {/* TODO M11 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
 
       {/*
-        TODO M4 data-model:
-          Render a Kanban board with the four columns from STAGES.
-          Each column should display the tasks whose status matches its id.
-          Pre-populate 3-4 mock tasks so the board isn't empty on first load.
-
         TODO M5 crud-modal:
           Add a "+" button that opens a modal with every Task field.
           Clicking a card should open the same modal in edit mode.
       */}
-      <main className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
-        Build the four-column board here · M4
+      <main aria-label="Task board" className="overflow-x-auto">
+        <div className="grid min-w-[960px] grid-cols-4 gap-6">
+          {STAGES.map((stage) => {
+            const stageTasks = tasks.filter((task) => task.status === stage.id);
+
+            return (
+              <section key={stage.id} aria-labelledby={`stage-${stage.id}`}>
+                <header className="mb-4 flex items-center justify-between border-b border-due-neutral pb-3">
+                  <h2 id={`stage-${stage.id}`} className="text-base font-semibold uppercase">
+                    {stage.label}
+                  </h2>
+                  <span className="font-mono text-xs text-text-muted" aria-label={`${stageTasks.length} tasks`}>
+                    {stageTasks.length}
+                  </span>
+                </header>
+                {stageTasks.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-due-neutral p-6 text-center text-sm text-text-muted">
+                    No tasks yet.
+                  </p>
+                ) : (
+                  <ul className="space-y-4">
+                    {stageTasks.map((task) => (
+                      <li key={task.id}>
+                        <article className="rounded-lg border border-due-neutral bg-surface-card p-4 hover:shadow-sm">
+                          <p className="mb-2 font-mono text-xs capitalize text-text-muted">{task.type}</p>
+                          <h3 className="text-sm font-medium">{task.title}</h3>
+                          <p className="mt-2 text-sm leading-relaxed text-text-muted">{task.description}</p>
+                        </article>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </main>
     </div>
   );
