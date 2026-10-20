@@ -13,6 +13,8 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
     contextTool: task?.contextTool ?? '',
   }));
   const [error, setError] = useState('');
+  const [copyStatus, setCopyStatus] = useState('');
+  const copyRequest = useRef(0);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -31,6 +33,22 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
     const { name, value } = event.target;
     setDraft((current) => ({ ...current, [name]: value }));
     if (name === 'title') setError('');
+    if (name === 'context') {
+      copyRequest.current += 1;
+      setCopyStatus('');
+    }
+  }
+
+  async function copyContext() {
+    if (!draft.context.trim()) return;
+    const request = ++copyRequest.current;
+    setCopyStatus('copying');
+    try {
+      await navigator.clipboard.writeText(draft.context);
+      if (request === copyRequest.current) setCopyStatus('success');
+    } catch {
+      if (request === copyRequest.current) setCopyStatus('error');
+    }
   }
 
   function submit(event) {
@@ -89,6 +107,18 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
             <textarea id="task-context" name="context" rows={6} value={draft.context} onChange={update}
               aria-describedby="task-context-help" className={`${fieldClass} resize-y font-mono text-sm`} />
           </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={copyContext}
+              disabled={!draft.context.trim() || copyStatus === 'copying'}
+              className={`${buttonClass} min-h-11 disabled:cursor-not-allowed disabled:opacity-50`}>
+              Copy Context
+            </button>
+            <p role="status" aria-live="polite" aria-atomic="true" className="text-xs leading-relaxed text-text-muted">
+              {copyStatus === 'success' && 'Copied!'}
+              {copyStatus === 'copying' && 'Copying…'}
+              {copyStatus === 'error' && 'Could not copy. Select the context text and copy it manually.'}
+            </p>
+          </div>
           <p id="task-context-help" className="text-xs leading-relaxed text-text-muted">
             Keep useful prompts, results, decisions and next steps here. Select the text to copy it into your AI tool.
           </p>
