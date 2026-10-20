@@ -186,8 +186,12 @@ export default function App() {
                   <ul className="space-y-4">
                     {stageTasks.map((task) => (
                       <li key={task.id}>
-                        <article className="rounded-lg border border-due-neutral bg-surface-card p-4 hover:shadow-sm">
-                          <p className="mb-2 font-mono text-xs capitalize text-text-muted">{task.type}</p>
+                        <article className={`rounded-lg border border-l-[3px] border-due-neutral bg-surface-card p-4 hover:shadow-sm ${
+                          task.type === 'bug' ? 'border-l-type-bug' : 'border-l-type-feature'
+                        }`}>
+                          <p className="mb-2 font-mono text-xs text-text-muted">
+                            {task.type === 'bug' ? 'Bug' : 'Feature'}
+                          </p>
                           <h3 className="text-sm font-medium">
                             <button type="button" onClick={() => setEditing({ task })}
                               className="text-left underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
