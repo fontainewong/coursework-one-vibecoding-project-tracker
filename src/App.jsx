@@ -3,6 +3,11 @@ import TaskModal from './TaskModal';
 import { getDeadline } from './deadline';
 import DeliverablesBoard, { INITIAL_ANCHORS } from './DeliverablesBoard';
 import TaskCalendar from './TaskCalendar';
+import TaskType from './TaskType';
+import TeamPanel from './TeamPanel';
+import CreateTeamModal from './CreateTeamModal';
+import { filterTasks } from './taskFilters';
+import ProjectMenu from './ProjectMenu';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -107,9 +112,9 @@ export function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
     try {
       const raw = window.localStorage.getItem(key);
-      return raw != null ? JSON.parse(raw) : initialValue;
+      return raw != null ? JSON.parse(raw) : typeof initialValue === 'function' ? initialValue() : initialValue;
     } catch {
-      return initialValue;
+      return typeof initialValue === 'function' ? initialValue() : initialValue;
     }
   });
 
@@ -124,12 +129,46 @@ export function useLocalStorage(key, initialValue) {
   return [value, setValue];
 }
 
+const EMPTY_FILTERS = { search: '', assignee: '*', type: 'all', overdue: false };
+
+function initialWorkspace() {
+  function readLegacy(key, fallback) {
+    try { return JSON.parse(window.localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  }
+  const tasks = readLegacy('vibetracker.tasks', INITIAL_TASKS);
+  const names = [...new Set([...TEAM, ...tasks.map((task) => task.assignee).filter(Boolean)])];
+  return { activeTeamId: 'starter', teams: [{ id: 'starter', name: 'Team starter',
+    members: names.map((name, index) => ({ id: `member-${index}`, name })),
+    tasks, anchors: readLegacy('vibetracker.anchors', INITIAL_ANCHORS),
+  }] };
+}
+
 export default function App() {
-  const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', INITIAL_TASKS);
+  const [workspace, setWorkspace] = useLocalStorage('vibetracker.workspace.v1', initialWorkspace);
+  const team = workspace.teams.find((item) => item.id === workspace.activeTeamId) ?? workspace.teams[0];
+  const tasks = team.tasks;
+  const anchors = team.anchors;
+  const [teamOpen, setTeamOpen] = useState(false);
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const hasFilters = filters.search !== '' || filters.assignee !== '*' || filters.type !== 'all' || filters.overdue;
+  function updateTeam(updated) {
+    setWorkspace((current) => ({ ...current, teams: current.teams.map((item) => item.id === updated.id ? updated : item) }));
+    setFilters((current) => current.assignee !== '*' && current.assignee !== '' && !updated.members.some((member) => member.name === current.assignee) ? { ...current, assignee: '*' } : current);
+  }
+  function setTasks(update) { updateTeam({ ...team, tasks: typeof update === 'function' ? update(team.tasks) : update }); }
+  function switchTeam(id) {
+    setWorkspace((current) => ({ ...current, activeTeamId: id }));
+    setFilters(EMPTY_FILTERS); setEditing(null); setTeamOpen(false);
+  }
+  function createTeam(name) {
+    const id = crypto.randomUUID();
+    setWorkspace((current) => ({ activeTeamId: id, teams: [...current.teams, { id, name, members: [], tasks: [], anchors: INITIAL_ANCHORS.map((anchor) => ({ ...anchor, url: null })) }] }));
+    setFilters(EMPTY_FILTERS); setCreatingTeam(false); setTeamOpen(true);
+  }
   // null closes the modal; { task: null } starts a new task.
   const [editing, setEditing] = useState(null);
   const [view, setView] = useState('board');
-  const [deliverablesOpen, setDeliverablesOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -167,57 +206,61 @@ export default function App() {
     setEditing(null);
   }
 
-  const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', INITIAL_ANCHORS);
-
   function saveAnchor(id, url) {
-    setAnchors((current) => INITIAL_ANCHORS.map((definition) => ({
+    updateTeam({ ...team, anchors: INITIAL_ANCHORS.map((definition) => ({
       ...definition,
-      url: definition.id === id ? url : current.find((anchor) => anchor.id === definition.id)?.url ?? null,
-    })));
+      url: definition.id === id ? url : anchors.find((anchor) => anchor.id === definition.id)?.url ?? null,
+    })) });
   }
+
+  const visibleTasks = filterTasks(tasks, filters, now);
+  const controlClass = 'min-h-11 rounded-md border border-due-neutral bg-surface-card px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary';
 
   return (
     <div className="min-h-screen bg-surface-page p-6 font-sans text-text-primary">
-      <header className="mb-6 flex items-end justify-between">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand-primary focus:px-4 focus:py-3 focus:text-white">Skip to content</a>
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-brand-primary">
             Project Tracker
           </h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {/* Replace this line with your team name from PRD §11. */}
-            Team starter
-          </p>
         </div>
-        <button type="button" onClick={() => setEditing({ task: null })}
-          className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary">
-          Add Task
-        </button>
+        <ProjectMenu team={team} teams={workspace.teams} onSwitch={switchTeam} onCreate={() => setCreatingTeam(true)} onManage={() => setTeamOpen(true)} onMember={(name) => { setFilters({ ...EMPTY_FILTERS, assignee: name }); setView('board'); }}/>
       </header>
 
-      <div role="group" aria-label="Board controls" className="mb-4 flex flex-wrap gap-2">
-        {['board', 'calendar'].map((option) => (
+      <div role="group" aria-label="Board controls" className="mb-4 flex flex-wrap items-center gap-2">
+        <button type="button" aria-label="Add task" title="Add task" onClick={() => setEditing({ task: null })}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <span aria-hidden="true" className="mx-2 text-due-neutral">|</span>
+        {['board', 'calendar', 'deliverables'].map((option) => (
           <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}
             className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${view === option ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card text-text-primary'}`}>
             {option}
           </button>
         ))}
-        <button type="button" aria-expanded={deliverablesOpen} aria-controls="deliverables-panel"
-          onClick={() => setDeliverablesOpen((open) => !open)}
-          className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${deliverablesOpen ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card text-text-primary'}`}>
-          Deliverables
-        </button>
       </div>
-      <div id="deliverables-panel" hidden={!deliverablesOpen}>
-        <DeliverablesBoard anchors={anchors} onSave={saveAnchor} />
-      </div>
-      <main aria-label={view === 'board' ? 'Task board' : 'Task calendar'} className="overflow-x-auto">
-        {view === 'calendar' ? <TaskCalendar tasks={tasks} today={now} onEdit={(task) => setEditing({ task })} /> : (
-        <div className="grid min-w-[960px] grid-cols-4 gap-6">
+      <fieldset disabled={view === 'deliverables'} role="search" aria-label="Find tasks" className="task-filters mb-4 min-w-0 rounded-lg border border-due-neutral bg-surface-card p-4 disabled:opacity-50">
+        <label className="min-w-0 text-xs text-text-muted">Search task titles
+          <input type="search" placeholder="Search titles…" value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} className={`${controlClass} mt-1 w-full text-text-primary`} />
+        </label>
+        <label className="min-w-0 text-xs text-text-muted">Assignee<select value={filters.assignee} onChange={(event) => setFilters({ ...filters, assignee: event.target.value })} className={`${controlClass} mt-1 block w-full min-w-0 text-text-primary`}>
+          <option value="*">All members</option><option value="">Unassigned</option>
+          {team.members.map((member) => <option key={member.id} value={member.name}>{member.name}</option>)}
+        </select></label>
+        <label className="min-w-0 text-xs text-text-muted">Task type<select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })} className={`${controlClass} mt-1 block w-full min-w-0 text-text-primary`}>
+          <option value="all">All types</option><option value="bug">Bug</option><option value="feature">Feature</option>
+        </select></label>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={filters.overdue} onChange={(event) => setFilters({ ...filters, overdue: event.target.checked })} className="h-4 w-4 accent-brand-primary"/>Overdue only</label>
+        <button type="button" disabled={!hasFilters} onClick={() => setFilters(EMPTY_FILTERS)} className={`${controlClass} whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40`}>Clear filters</button>
+      </fieldset>
+      <main id="main-content" tabIndex={-1} aria-label={view === 'deliverables' ? 'Deliverables' : view === 'board' ? 'Task board' : 'Task calendar'} className="min-w-0 overflow-x-auto">
+        {view === 'deliverables' ? <DeliverablesBoard key={team.id} anchors={anchors} onSave={saveAnchor} /> : view === 'calendar' ? <TaskCalendar key={team.id} tasks={visibleTasks} today={now} onEdit={(task) => setEditing({ task })} /> : (
+        <div className="grid w-full min-w-[960px] grid-cols-4 gap-6">
           {STAGES.map((stage) => {
-            const stageTasks = tasks.filter((task) => task.status === stage.id);
+            const stageTasks = visibleTasks.filter((task) => task.status === stage.id);
 
             return (
-              <section key={stage.id} aria-labelledby={`stage-${stage.id}`}>
+              <section key={stage.id} aria-labelledby={`stage-${stage.id}`} className="min-w-0">
                 <header className="mb-4 flex items-center justify-between border-b border-due-neutral pb-3">
                   <h2 id={`stage-${stage.id}`} className="text-base font-semibold uppercase">
                     {stage.label}
@@ -228,7 +271,7 @@ export default function App() {
                 </header>
                 {stageTasks.length === 0 ? (
                   <p className="rounded-lg border border-dashed border-due-neutral p-6 text-center text-sm text-text-muted">
-                    No tasks yet.
+                    {hasFilters ? 'No matching tasks.' : 'No tasks yet.'}
                   </p>
                 ) : (
                   <ul className="space-y-4">
@@ -236,12 +279,10 @@ export default function App() {
                       const deadline = getDeadline(task, now);
                       return (
                       <li key={task.id}>
-                        <article className={`rounded-lg border border-l-[3px] border-due-neutral p-4 hover:shadow-sm ${deadline.tint} ${
+                        <article className={`min-w-0 [overflow-wrap:anywhere] rounded-lg border border-l-[3px] border-due-neutral p-4 hover:shadow-sm ${deadline.tint} ${
                           task.type === 'bug' ? 'border-l-type-bug' : 'border-l-type-feature'
                         }`}>
-                          <p className="mb-2 font-mono text-xs text-text-muted">
-                            {task.type === 'bug' ? 'Bug' : 'Feature'}
-                          </p>
+                          <div className="mb-2"><TaskType type={task.type}/></div>
                           <h3 className="text-sm font-medium">
                             <button type="button" onClick={() => setEditing({ task })}
                               className="text-left underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
@@ -267,7 +308,9 @@ export default function App() {
         </div>
         )}
       </main>
-      {editing && <TaskModal task={editing.task} stages={STAGES} team={TEAM}
+      {teamOpen && <TeamPanel team={team} now={now} onUpdate={updateTeam} onClose={() => setTeamOpen(false)} onViewTasks={(name) => { setFilters({ ...EMPTY_FILTERS, assignee: name }); setTeamOpen(false); }}/>}
+      {creatingTeam && <CreateTeamModal onCreate={createTeam} onClose={() => setCreatingTeam(false)}/>}
+      {editing && <TaskModal task={editing.task} stages={STAGES} team={team.members.map((member) => member.name)}
         onSave={saveTask} onDelete={deleteTask} onClose={() => setEditing(null)} />}
     </div>
   );

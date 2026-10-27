@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TaskType from './TaskType';
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -31,6 +32,7 @@ export default function TaskCalendar({ tasks, today, onEdit }) {
             className={`min-h-11 rounded-md border border-due-neutral px-3 text-sm ${focusClass}`}>Next</button>
         </div>
       </header>
+      <p className="mb-4 min-h-10 text-sm text-text-muted">{tasks.some((task) => !task.dueDate) ? `${tasks.filter((task) => !task.dueDate).length} matching tasks have no due date. View them on the board.` : 'All matching tasks with a due date appear on the calendar.'}</p>
       <div aria-hidden="true" className="mb-2 hidden grid-cols-7 gap-2 sm:grid">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
           <span key={day} className="px-2 text-xs text-text-muted">{day}</span>
@@ -59,7 +61,7 @@ export default function TaskCalendar({ tasks, today, onEdit }) {
                   <li key={task.id}>
                     <button type="button" onClick={() => onEdit(task)} aria-label={`Edit ${task.type === 'bug' ? 'Bug' : 'Feature'} task: ${task.title}, due ${fullDate}`}
                       className={`min-h-11 w-full whitespace-normal break-words rounded-md border border-l-[3px] border-due-neutral bg-surface-page p-2 text-left hover:shadow-sm ${focusClass} ${task.type === 'bug' ? 'border-l-type-bug' : 'border-l-type-feature'}`}>
-                      <span className="block font-mono text-xs text-text-muted">{task.type === 'bug' ? 'Bug' : 'Feature'}</span>
+                      <TaskType type={task.type}/>
                       <span className="mt-1 block text-sm font-medium">{task.title}</span>
                     </button>
                   </li>

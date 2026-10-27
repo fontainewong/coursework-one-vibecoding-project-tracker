@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import TaskType from './TaskType';
 
 export default function TaskModal({ task, stages, team, onSave, onDelete, onClose }) {
   const dialogRef = useRef(null);
@@ -84,6 +85,7 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
           </label>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label htmlFor="task-type">Type
+              <span className="ml-2"><TaskType type={draft.type}/></span>
               <select id="task-type" name="type" value={draft.type} onChange={update} className={fieldClass}>
                 <option value="feature">Feature</option><option value="bug">Bug</option>
               </select>
@@ -94,9 +96,9 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
               </select>
             </label>
           </div>
-          <label className="block" htmlFor="task-assignee">Assignee (required)
-            <select required id="task-assignee" name="assignee" value={draft.assignee} onChange={update} className={fieldClass}>
-              <option value="" disabled>Select a team member</option>
+          <label className="block" htmlFor="task-assignee">Assignee
+            <select id="task-assignee" name="assignee" value={draft.assignee} onChange={update} className={fieldClass}>
+              <option value="">Unassigned</option>
               {team.map((name) => <option key={name} value={name}>{name}</option>)}
             </select>
           </label>

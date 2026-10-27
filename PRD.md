@@ -175,7 +175,7 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 - FR07:	The system shall allow users to record project milestones and track whether they have been completed.	
 - FR08:	The system shall require users to sign in before accessing a team’s board and restrict access to authorised team members.
 - FR09:	The system shall allow users to add members to the project team.
-- FR10:	The system shall allow a team to manage multiple projects.
+- FR10:	The system shall allow a team to manage multiple projects. （需要justify 每一個 requirements / 寫是不是MVP）
 
 ### Non-functional requirements
 - NFR01: Accessibility	All core task-management actions shall be usable with a keyboard, with visible focus indicators and labelled controls.
@@ -189,6 +189,6 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 - DR02: Each task shall retain its AI prompts, results and supporting context, with an optional AI tool name and a last-updated timestamp.
 - DR03: Each team-member record shall store a unique ID, name, email address and GitHub username.
 - DR04: Each project milestone shall store a unique ID, title, optional target date and completion status. 
-- DR05: Tasks, milestones and team memberships shall be associated with the relevant project or team using stable identifiers. 
+- DR05: Tasks, milestones and team memberships shall be associated with the relevant project or team using stable identifiers.  （先上網看一些data requirements 的example）
 
 *PRD version: hackathon-starter v1 · maintained by Prof. Dr. Ignacio Alvarez*
