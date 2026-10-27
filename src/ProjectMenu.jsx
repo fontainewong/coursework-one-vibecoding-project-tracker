@@ -32,7 +32,7 @@ export default function ProjectMenu({ team, teams, onSwitch, onCreate, onManage,
       </button>)}
       <div className="my-2 border-t border-due-neutral"/>
       <p className="px-3 py-2 text-xs font-semibold text-text-muted">MEMBERS · {team.members.length}</p>
-      {team.members.length ? team.members.map((member) => <button key={member.id} type="button" className={`${itemClass} flex items-center gap-2`} onClick={() => run(() => onMember(member.name))}>
+      {team.members.length ? team.members.map((member) => <button key={member.id} type="button" className={`${itemClass} flex items-center gap-2`} onClick={() => run(() => onMember(member.id))}>
         <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-page text-xs">{member.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
         <span className="min-w-0 break-words">{member.name}</span>
       </button>) : <p className="px-3 py-2 text-sm text-text-muted">No members yet.</p>}

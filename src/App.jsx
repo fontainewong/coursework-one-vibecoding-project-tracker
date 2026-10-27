@@ -8,6 +8,7 @@ import TeamPanel from './TeamPanel';
 import CreateTeamModal from './CreateTeamModal';
 import { filterTasks } from './taskFilters';
 import ProjectMenu from './ProjectMenu';
+import MemberView from './MemberView';
 
 /**
  * Vibecoding Project Tracker — starter scaffold.
@@ -149,6 +150,8 @@ export default function App() {
   const tasks = team.tasks;
   const anchors = team.anchors;
   const [teamOpen, setTeamOpen] = useState(false);
+  const [memberId, setMemberId] = useState(null);
+  const selectedMember = team.members.find((member) => member.id === memberId);
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const hasFilters = filters.search !== '' || filters.assignee !== '*' || filters.type !== 'all' || filters.overdue;
@@ -225,7 +228,7 @@ export default function App() {
             Project Tracker
           </h1>
         </div>
-        <ProjectMenu team={team} teams={workspace.teams} onSwitch={switchTeam} onCreate={() => setCreatingTeam(true)} onManage={() => setTeamOpen(true)} onMember={(name) => { setFilters({ ...EMPTY_FILTERS, assignee: name }); setView('board'); }}/>
+        <ProjectMenu team={team} teams={workspace.teams} onSwitch={switchTeam} onCreate={() => setCreatingTeam(true)} onManage={() => setTeamOpen(true)} onMember={setMemberId}/>
       </header>
 
       <div role="group" aria-label="Board controls" className="mb-4 flex flex-wrap items-center gap-2">
@@ -308,7 +311,8 @@ export default function App() {
         </div>
         )}
       </main>
-      {teamOpen && <TeamPanel team={team} now={now} onUpdate={updateTeam} onClose={() => setTeamOpen(false)} onViewTasks={(name) => { setFilters({ ...EMPTY_FILTERS, assignee: name }); setTeamOpen(false); }}/>}
+      {teamOpen && <TeamPanel team={team} now={now} onUpdate={updateTeam} onClose={() => setTeamOpen(false)} onEditTask={(task) => setEditing({ task })}/>}
+      {selectedMember && <MemberView member={selectedMember} tasks={team.tasks} now={now} onClose={() => setMemberId(null)} onEditTask={(task) => setEditing({ task })}/>}
       {creatingTeam && <CreateTeamModal onCreate={createTeam} onClose={() => setCreatingTeam(false)}/>}
       {editing && <TaskModal task={editing.task} stages={STAGES} team={team.members.map((member) => member.name)}
         onSave={saveTask} onDelete={deleteTask} onClose={() => setEditing(null)} />}
