@@ -163,32 +163,80 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 - 5 min pitch is rehearsed.
 
 
+
 ## Project requirements
 
 ### Functional requirements
-- FR01:	The system shall allow users to create, view, edit and delete project tasks.
-- FR02:	The system shall display tasks on a Kanban board and allow users to change their status between To Do, In Progress, Review and Done.
-- FR03:	The system shall allow users to assign and reassign tasks to team members.
-- FR04:	The system shall allow users to set task due dates and identify approaching and overdue tasks.
-- FR05:	The system shall allow users to record and edit useful AI prompts, their results and supporting context against a task.	
-- FR06:	The system shall allow users to copy a task’s details and saved context as formatted text for reuse in an AI tool.
-- FR07:	The system shall allow users to record project milestones and track whether they have been completed.	
-- FR08:	The system shall require users to sign in before accessing a team’s board and restrict access to authorised team members.
-- FR09:	The system shall allow users to add members to the project team.
-- FR10:	The system shall allow a team to manage multiple projects. （需要justify 每一個 requirements / 寫是不是MVP）
+
+- FR01 (MVP): The system shall require users to sign in with their email and password before accessing any project and allow them to sign out.
+
+- FR02 (MVP): The system shall allow users to create, view, edit and delete tasks, asking for confirmation before deletion.
+
+- FR03 (MVP): The system shall display tasks on a Kanban board with To Do, In Progress, Review and Done columns, and allow users to change a task’s status.
+
+- FR04 (MVP): The system shall allow users to classify each task as a feature or a bug, shown with a distinct colour and icon.
+
+- FR05 (MVP): The system shall allow users to assign, reassign or unassign tasks, display the assignee’s initials on each assigned task card, and provide feedback when the assignment changes.
+
+- FR06 (MVP): The system shall allow users to set an optional due date and shall distinguish overdue, due-today and due-soon tasks.
+
+- FR07 (MVP): The system shall allow users to record useful AI prompts, their results and supporting context against a task, and show when this was last updated.
+
+- FR08: The system shall pre-fill new task context with the headings Background, Constraints, Tried so far and Pick up.
+
+- FR09: The system shall allow users to record which AI tool the context relates to.
+
+- FR10: The system shall allow users to copy a task’s title, description and context as Markdown from the card or task form, confirming when the copy succeeds.
+
+- FR11 (MVP): The system shall allow users to create milestones with a title and optional target date, mark them complete and see overall progress.
+
+- FR12: The system shall allow users to save, open and remove links to the Presentation, Demo, Report and Documentation in a dedicated Deliverables view, showing which links are missing. This view is separate from the board to keep the board uncluttered.
+
+- FR13: The system shall allow users to filter tasks by assignee, type and overdue status and search them by title. Search and the type and overdue filters were added to help users find tasks as a project grows.
+
+- FR14: The system shall show the tasks assigned to each member, with counts of unfinished and overdue tasks.
+
+- FR15: The system shall allow users to add members to a project and remove them, retaining their tasks and allowing those tasks to be reassigned or left unassigned.
+
+- FR16: The system shall allow users to edit their own name, email and GitHub username, while other members’ profiles are view-only. This was added because sign-in introduces personal accounts that users must maintain.
+
+- FR17: The system shall allow users to create, rename and switch between projects, each with its own tasks, milestones, deliverables and project membership.
+
+- FR18: The system shall display tasks in a monthly calendar by due date. This was added to give an overview of deadlines over time, supporting the brief’s aim of tracking tasks over time.
 
 ### Non-functional requirements
-- NFR01: Accessibility	All core task-management actions shall be usable with a keyboard, with visible focus indicators and labelled controls.
-- NFR02: Visual clarity	Task types and due-date states shall be communicated through text or icons as well as colour.
-- NFR03: Usability	Forms shall clearly identify required fields, explain validation errors and preserve entered information when validation fails.
-- NFR04: Persistence	Saved tasks and their associated context shall remain available after refreshing or reopening the application in the supported storage environment.
-- NFR05: Access control	Access restrictions shall be enforced wherever protected project data is stored or served, rather than relying only on hiding interface elements.
+
+- NFR01 (MVP): All features shall be operable by keyboard alone, as the client prioritised accessibility and WCAG 2.2 requires keyboard access for users who cannot use a mouse (SC 2.1.1).
+
+- NFR02 (MVP): Every interactive element shall show a visible focus indicator so keyboard users can see their position (WCAG 2.2 SC 2.4.7).
+
+- NFR03 (MVP): Information shown by colour, such as task type and due-date status, shall also be shown by text or an icon, because users with colour-vision deficiency cannot rely on colour (WCAG 2.2 SC 1.4.1).
+
+- NFR04 (MVP): All controls and form fields shall have programmatically determinable accessible names so screen readers can identify them (WCAG 2.2 SC 4.1.2).
+
+- NFR05 (MVP): The interface shall use consistent layouts, familiar conventions and appropriate feedback on user actions and their outcomes, supporting the client’s request for an intuitive interface (Nielsen, 1994).
+
+- NFR06 (MVP): Forms shall identify required fields and describe validation errors in text (WCAG 2.2 SC 3.3.1, 3.3.2). Entered information shall be retained when validation fails so users do not have to re-enter it.
+
+- NFR07 (MVP): Project details, memberships, user profile information, tasks, context, milestones and deliverable links shall remain available after the page is refreshed or reopened, so users can continue their work without losing saved information.
+
+- NFR08 (MVP): Project boards and their data shall only be accessible after signing in, so that project content is not publicly available, as requested by the client.
+
+- NFR09 (MVP): The system shall run in current desktop browsers without installation, as the client asked for mainstream web technologies.
 
 ### Data requirements
-- DR01: Each task shall store a unique ID, title, description, type, status, assignee, creation date and optional due date. 
-- DR02: Each task shall retain its AI prompts, results and supporting context, with an optional AI tool name and a last-updated timestamp.
-- DR03: Each team-member record shall store a unique ID, name, email address and GitHub username.
-- DR04: Each project milestone shall store a unique ID, title, optional target date and completion status. 
-- DR05: Tasks, milestones and team memberships shall be associated with the relevant project or team using stable identifiers.  （先上網看一些data requirements 的example）
+
+- DR01 (MVP): User account: ID, name, email, password and GitHub username, entered by users when registering or editing their profile; needed for sign-in and to identify task owners.
+
+- DR02 (MVP): Project: ID, name and member user IDs, created by users; needed to group a team’s work and control access.
+
+- DR03 (MVP): Task: ID, project ID, title, description, type, status, optional assignee user ID, optional due date and created date, entered by users with IDs and dates generated by the system; needed to display and track tasks.
+
+- DR04 (MVP): Task context: text, optional AI tool name and last-updated timestamp, written by users from their AI sessions; needed to preserve prompts and results for later reuse.
+
+- DR05 (MVP): Milestone: ID, project ID, title, optional target date and completion status, entered by users; needed to track project progress.
+
+- DR06: Deliverable link: project ID, deliverable type and URL, pasted by users from tools such as GitHub or Google Drive; needed to keep final outputs in one place.
+
 
 *PRD version: hackathon-starter v1 · maintained by Prof. Dr. Ignacio Alvarez*
