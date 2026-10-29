@@ -186,9 +186,9 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - FR09: The system shall allow users to record which AI tool the context relates to.
 
-- FR10: The system shall allow users to copy a task’s title, description and context as Markdown from the card or task form, confirming when the copy succeeds.
+- FR10: The system shall allow users to copy a task’s title, description and context as Markdown from the task form, confirming when the copy succeeds.
 
-- FR11 (MVP): The system shall allow users to create and edit milestones with a title, optional description and optional target date, associate tasks from the same project, mark milestones complete and see overall progress.
+- FR11 (MVP): The system shall allow users to create, edit and delete milestones with a title, optional description and optional target date, associate tasks from the same project, mark milestones complete and see overall progress. 
 
 - FR12: The system shall allow users to save multiple links for each of the Presentation, Demo, Report and Documentation in a dedicated Deliverables view, with optional link titles, individual link editing, opening and removal, and an indication of which deliverable categories have no links. This view is separate from the board to keep the board uncluttered.
 

@@ -3,6 +3,17 @@ import TaskType from './TaskType';
 import useDialog from './useDialog.js';
 import { CONTEXT_TEMPLATE, taskMarkdown } from './model.js';
 
+function readableDate(value) {
+  if (!value) return 'Not available';
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = new Date(dateOnly ? `${value}T00:00:00` : value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return date.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    ...(!dateOnly && { hour: '2-digit', minute: '2-digit' }),
+  });
+}
+
 export default function TaskModal({ task, stages, team, onSave, onDelete, onClose }) {
   const dialogRef = useDialog();
   const [draft, setDraft] = useState(() => ({
@@ -122,9 +133,9 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
             </select>
           </label>
           {task?.contextUpdatedAt && <p className="text-xs text-text-muted">
-            Context last saved: <time dateTime={task.contextUpdatedAt}>{task.contextUpdatedAt}</time>
+            Context last saved: <time dateTime={task.contextUpdatedAt}>{readableDate(task.contextUpdatedAt)}</time>
           </p>}
-          {task && <p className="text-xs text-text-muted">Created: <time dateTime={task.createdDate}>{task.createdDate}</time></p>}
+          {task && <p className="text-xs text-text-muted">Created: <time dateTime={task.createdDate}>{readableDate(task.createdDate)}</time></p>}
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           {task && <button type="button" className={`${buttonClass} mr-auto`} onClick={() => {
