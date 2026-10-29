@@ -4,11 +4,11 @@ import { filterTasks, isOverdue } from './taskFilters.js';
 
 const now = new Date(2026, 9, 27, 12);
 const tasks = [
-  { id: 'none', title: 'No deadline', assignee: '', type: 'feature', status: 'todo', dueDate: null },
-  { id: 'today', title: 'Search UI', assignee: 'Maya', type: 'feature', status: 'todo', dueDate: '2026-10-27' },
-  { id: 'old', title: 'Fix SEARCH', assignee: 'Maya', type: 'bug', status: 'review', dueDate: '2026-10-20' },
-  { id: 'done', title: 'Search complete', assignee: 'Maya', type: 'bug', status: 'done', dueDate: '2026-10-21' },
-  { id: 'same', title: 'Other bug', assignee: 'Leo', type: 'bug', status: 'todo', dueDate: '2026-10-27' },
+  { id: 'none', title: 'No deadline', assigneeUserId: null, type: 'feature', status: 'todo', dueDate: null },
+  { id: 'today', title: 'Search UI', assigneeUserId: 'user-maya', type: 'feature', status: 'todo', dueDate: '2026-10-27' },
+  { id: 'old', title: 'Fix SEARCH', assigneeUserId: 'user-maya', type: 'bug', status: 'review', dueDate: '2026-10-20' },
+  { id: 'done', title: 'Search complete', assigneeUserId: 'user-maya', type: 'bug', status: 'done', dueDate: '2026-10-21' },
+  { id: 'same', title: 'Other bug', assigneeUserId: 'user-leo', type: 'bug', status: 'todo', dueDate: '2026-10-27' },
 ];
 
 test('overdue excludes today, completed tasks, and missing deadlines', () => {
@@ -16,7 +16,7 @@ test('overdue excludes today, completed tasks, and missing deadlines', () => {
   for (const index of [0, 1, 3, 4]) assert.equal(isOverdue(tasks[index], now), false);
 });
 test('search, assignee, type and overdue combine', () => {
-  assert.deepEqual(filterTasks(tasks, { search: ' SEARCH ', assignee: 'Maya', type: 'bug', overdue: true }, now).map((task) => task.id), ['old']);
+  assert.deepEqual(filterTasks(tasks, { search: ' SEARCH ', assignee: 'user-maya', type: 'bug', overdue: true }, now).map((task) => task.id), ['old']);
 });
 test('deadline sort is stable, places missing dates last, and preserves source order', () => {
   assert.deepEqual(filterTasks(tasks, {}, now).map((task) => task.id), ['old', 'done', 'today', 'same', 'none']);

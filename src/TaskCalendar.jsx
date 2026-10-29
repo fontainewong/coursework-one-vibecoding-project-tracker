@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import TaskType from './TaskType';
+import AssigneeBadge from './AssigneeBadge';
+import { getDeadline } from './deadline';
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export default function TaskCalendar({ tasks, today, onEdit }) {
+export default function TaskCalendar({ tasks, users, today, onEdit }) {
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
@@ -60,9 +62,11 @@ export default function TaskCalendar({ tasks, today, onEdit }) {
                 {dayTasks.map((task) => (
                   <li key={task.id}>
                     <button type="button" onClick={() => onEdit(task)} aria-label={`Edit ${task.type === 'bug' ? 'Bug' : 'Feature'} task: ${task.title}, due ${fullDate}`}
-                      className={`min-h-11 w-full whitespace-normal break-words rounded-md border border-l-[3px] border-due-neutral bg-surface-page p-2 text-left hover:shadow-sm ${focusClass} ${task.type === 'bug' ? 'border-l-type-bug' : 'border-l-type-feature'}`}>
+                      className={`min-h-11 w-full whitespace-normal break-words rounded-md border border-due-neutral bg-surface-page p-2 text-left hover:shadow-sm ${focusClass}`}>
                       <TaskType type={task.type}/>
                       <span className="mt-1 block text-sm font-medium">{task.title}</span>
+                      <span className="mt-2 block"><AssigneeBadge user={users.find((user) => user.id === task.assigneeUserId)}/></span>
+                      <span className="mt-2 block text-xs text-text-muted">{getDeadline(task, today).label}</span>
                     </button>
                   </li>
                 ))}

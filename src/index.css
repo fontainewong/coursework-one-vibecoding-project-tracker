@@ -15,6 +15,24 @@ html {
   outline-offset: 3px;
 }
 
+progress {
+  appearance: none;
+  border: 0;
+  @apply overflow-hidden rounded-full bg-due-neutral;
+}
+
+progress::-webkit-progress-bar {
+  @apply rounded-full bg-due-neutral;
+}
+
+progress::-webkit-progress-value {
+  @apply rounded-full bg-brand-primary;
+}
+
+progress::-moz-progress-bar {
+  @apply rounded-full bg-brand-primary;
+}
+
 /* Control sizes depend on the viewport, never on the selected member or results. */
 .task-filters {
   display: grid;

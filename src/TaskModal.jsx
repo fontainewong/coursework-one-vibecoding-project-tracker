@@ -1,51 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import TaskType from './TaskType';
+import useDialog from './useDialog.js';
+import { CONTEXT_TEMPLATE, taskMarkdown } from './model.js';
 
 export default function TaskModal({ task, stages, team, onSave, onDelete, onClose }) {
-  const dialogRef = useRef(null);
+  const dialogRef = useDialog();
   const [draft, setDraft] = useState(() => ({
     title: task?.title ?? '',
     description: task?.description ?? '',
     type: task?.type ?? 'feature',
     status: task?.status ?? stages[0].id,
-    assignee: task?.assignee ?? team[0] ?? '',
+    assigneeUserId: task?.assigneeUserId ?? '',
     dueDate: task?.dueDate ?? '',
-    context: task?.context ?? '',
+    context: task?.context ?? (task ? '' : CONTEXT_TEMPLATE),
     contextTool: task?.contextTool ?? '',
   }));
   const [error, setError] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const copyRequest = useRef(0);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    dialog.showModal();
-    document.body.style.overflow = 'hidden';
-    return () => {
-      dialog.close();
-      document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, []);
-
   function update(event) {
     const { name, value } = event.target;
     setDraft((current) => ({ ...current, [name]: value }));
     if (name === 'title') setError('');
-    if (name === 'context') {
+    if (['title', 'description', 'context'].includes(name)) {
       copyRequest.current += 1;
       setCopyStatus('');
     }
   }
 
   async function copyContext() {
-    if (!draft.context.trim()) return;
+    if (!draft.title.trim()) { setError('Enter a task title before copying.'); dialogRef.current.querySelector('#task-title').focus(); return; }
     const request = ++copyRequest.current;
     setCopyStatus('copying');
     try {
-      await navigator.clipboard.writeText(draft.context);
+      await navigator.clipboard.writeText(taskMarkdown(draft));
       if (request === copyRequest.current) setCopyStatus('success');
     } catch {
       if (request === copyRequest.current) setCopyStatus('error');
@@ -67,9 +56,9 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
   const buttonClass = 'rounded-md border border-due-neutral px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary';
 
   return (
-    <dialog ref={dialogRef} aria-labelledby="task-modal-title" onCancel={onClose}
+    <dialog ref={dialogRef} aria-labelledby="task-modal-title" onCancel={(event) => { event.preventDefault(); event.stopPropagation(); onClose(); }}
       className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-xl bg-surface-card p-5 font-sans text-text-primary shadow-xl backdrop:bg-black/50 sm:p-6">
-      <form onSubmit={submit}>
+      <form noValidate onSubmit={submit}>
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 id="task-modal-title" className="text-lg font-semibold">{task ? 'Edit Task' : 'Add Task'}</h2>
           <button type="button" onClick={onClose} className={buttonClass}>Close</button>
@@ -97,9 +86,9 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
             </label>
           </div>
           <label className="block" htmlFor="task-assignee">Assignee
-            <select id="task-assignee" name="assignee" value={draft.assignee} onChange={update} className={fieldClass}>
+            <select id="task-assignee" name="assigneeUserId" value={draft.assigneeUserId} onChange={update} className={fieldClass}>
               <option value="">Unassigned</option>
-              {team.map((name) => <option key={name} value={name}>{name}</option>)}
+              {team.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
             </select>
           </label>
           <label className="block" htmlFor="task-due-date">Due date (optional)
@@ -111,18 +100,18 @@ export default function TaskModal({ task, stages, team, onSave, onDelete, onClos
           </label>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={copyContext}
-              disabled={!draft.context.trim() || copyStatus === 'copying'}
+              disabled={copyStatus === 'copying'}
               className={`${buttonClass} min-h-11 disabled:cursor-not-allowed disabled:opacity-50`}>
-              Copy Context
+              Copy as Markdown
             </button>
             <p role="status" aria-live="polite" aria-atomic="true" className="text-xs leading-relaxed text-text-muted">
               {copyStatus === 'success' && 'Copied!'}
               {copyStatus === 'copying' && 'Copying…'}
-              {copyStatus === 'error' && 'Could not copy. Select the context text and copy it manually.'}
+              {copyStatus === 'error' && 'Could not copy. Check clipboard permissions, then try again.'}
             </p>
           </div>
           <p id="task-context-help" className="text-xs leading-relaxed text-text-muted">
-            Keep useful prompts, results, decisions and next steps here. Select the text to copy it into your AI tool.
+            Keep useful prompts, results, decisions and next steps here. Copy as Markdown includes the title, description and context.
           </p>
           <label className="block" htmlFor="task-context-tool">AI Tool (optional)
             <select id="task-context-tool" name="contextTool" value={draft.contextTool} onChange={update} className={fieldClass}>

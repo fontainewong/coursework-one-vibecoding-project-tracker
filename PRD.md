@@ -188,9 +188,9 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - FR10: The system shall allow users to copy a task’s title, description and context as Markdown from the card or task form, confirming when the copy succeeds.
 
-- FR11 (MVP): The system shall allow users to create milestones with a title and optional target date, mark them complete and see overall progress.
+- FR11 (MVP): The system shall allow users to create and edit milestones with a title, optional description and optional target date, associate tasks from the same project, mark milestones complete and see overall progress.
 
-- FR12: The system shall allow users to save, open and remove links to the Presentation, Demo, Report and Documentation in a dedicated Deliverables view, showing which links are missing. This view is separate from the board to keep the board uncluttered.
+- FR12: The system shall allow users to save multiple links for each of the Presentation, Demo, Report and Documentation in a dedicated Deliverables view, with optional link titles, individual link editing, opening and removal, and an indication of which deliverable categories have no links. This view is separate from the board to keep the board uncluttered.
 
 - FR13: The system shall allow users to filter tasks by assignee, type and overdue status and search them by title. Search and the type and overdue filters were added to help users find tasks as a project grows.
 
@@ -200,7 +200,7 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - FR16: The system shall allow users to edit their own name, email and GitHub username, while other members’ profiles are view-only. This was added because sign-in introduces personal accounts that users must maintain.
 
-- FR17: The system shall allow users to create, rename and switch between projects, each with its own tasks, milestones, deliverables and project membership.
+- FR17: FR17 : The system shall allow users to create, rename, switch between and delete projects, each with its own tasks, milestones, deliverables and members. Deletion shall require confirmation and clearly identify the affected data.
 
 - FR18: The system shall display tasks in a monthly calendar by due date. This was added to give an overview of deadlines over time, supporting the brief’s aim of tracking tasks over time.
 
@@ -226,7 +226,7 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 ### Data requirements
 
-- DR01 (MVP): User account: ID, name, email, password and GitHub username, entered by users when registering or editing their profile; needed for sign-in and to identify task owners.
+- DR01 (MVP): User account: ID, name, email, password and GitHub username, provided when the account is created and kept up to date by the user through their profile; needed for sign-in and to identify task owners.
 
 - DR02 (MVP): Project: ID, name and member user IDs, created by users; needed to group a team’s work and control access.
 
@@ -234,9 +234,9 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - DR04 (MVP): Task context: text, optional AI tool name and last-updated timestamp, written by users from their AI sessions; needed to preserve prompts and results for later reuse.
 
-- DR05 (MVP): Milestone: ID, project ID, title, optional target date and completion status, entered by users; needed to track project progress.
+- DR05 (MVP): Milestone: ID, project ID, title, optional description, optional target date, related task IDs from the same project and completion status, entered by users; needed to track project progress.
 
-- DR06: Deliverable link: project ID, deliverable type and URL, pasted by users from tools such as GitHub or Google Drive; needed to keep final outputs in one place.
+- DR06: Deliverable link: ID, project ID, deliverable type, optional display title and URL, pasted by users from tools such as GitHub or Google Drive; needed to keep multiple final outputs in one place and edit or remove each link independently.
 
 
 *PRD version: hackathon-starter v1 · maintained by Prof. Dr. Ignacio Alvarez*

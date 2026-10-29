@@ -1,4 +1,22 @@
-# Vibecoding Project Tracker — Hackathon Starter
+# Project Tracker — Coursework Prototype
+
+This is a clickable React prototype with simulated sign-in and localStorage persistence. The **Project requirements** section in [PRD.md](PRD.md) is the source of truth. Starter instructions below are archived and do not define the coursework scope.
+
+Run `npm install` once, then `npm run dev`. Run checks with `npm run build` and `node --test src/`.
+
+The workspace contains eight fictional A–H users, from Amy Anderson to Henry Hudson. The login screen offers only Amy, Ben and Chloe (A–C) to keep assessment simple; all three belong to the seeded Coursework Project. Their initial password is `Demo123!`; select an account to fill its credentials. Email addresses and GitHub usernames are demo data. Profile edits persist and updated demo emails are shown on the login screen. There is no registration or backend authentication.
+
+Project data is saved under `vibetracker.workspace.v2`. Existing `vibetracker.workspace.v1` and standalone task/link data are imported without clearing the old backup keys. Only the eight demo user identities remain in the active workspace; tasks owned by removed legacy users are kept and unassigned. Amy can access imported projects. All demo users share a new Coursework Project; newly created projects belong to their creator until other existing users are added. Sign out to switch demo accounts. The session lasts for the browser tab, while project and profile data persist in localStorage.
+
+On a fresh browser profile, sample tasks are seeded automatically with populated Markdown context (Background, Constraints, Tried so far and Pick up). Opening the app again preserves saved work. Existing untouched sample contexts are upgraded once; user-written contexts are retained. Milestone cards open an editor for descriptions, dates and related project tasks. Each deliverable category supports multiple individually editable/removable links; existing single links migrate into the list.
+
+Both seeded projects have a clickable example in each deliverable category, all pointing to `https://coursework-one-vibecoding-project-t.vercel.app/`. Coursework Project includes all eight users with an assigned task for each, plus an unassigned example. Interface Study has Amy, Ben, Chloe, Emma and Henry, each with a task. All three offered demo accounts can switch between both projects while the membership lists differ. Older seed data is enriched once without replacing user-added links or task edits. Deleted examples stay deleted after the upgrade until an explicit seed reset.
+
+Manage project includes a Delete project confirmation. Enter exactly `delete PROJECT_NAME` using the saved project name, including its case. Deletion removes that project's nested tasks/context, milestones and links, retains other projects and user records, and selects another accessible project if available.
+
+To intentionally replace all current projects, tasks and profile edits with fresh seed data, open the site with `?resetDemo=1` (for example `http://127.0.0.1:5173/?resetDemo=1`). This signs out and resets the active localStorage workspace for that browser and origin. The URL parameter is then removed so normal refreshes preserve subsequent changes. Old migration backup keys are not imported again while the active workspace exists.
+
+## Archived starter documentation
 
 You're forking this repo as the starting point for the **UXD Vibecoding Hackathon 2026**. The goal of the hackathon is to ship a Vibecoding Project Tracker in ~3 hours: a Kanban-style tool that tracks your vibecoding tasks and stores the prompts that produced them.
 

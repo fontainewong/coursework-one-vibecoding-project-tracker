@@ -43,8 +43,8 @@ These are the colors the build milestones will reference. Once chosen, paste the
 
 | Token | Hex | When used |
 |---|---|---|
-| `type-feature` | `#28C840` | Cards tagged `feature` (accent stripe + icon) |
-| `type-bug` | `#FF5F57` | Cards tagged `bug` (accent stripe + icon) |
+| `type-feature` | `#28C840` | Feature icon; task card borders stay neutral |
+| `type-bug` | `#FF5F57` | Bug icon; task card borders stay neutral |
 
 ### Due-date states (M8 `due-tint`)
 
