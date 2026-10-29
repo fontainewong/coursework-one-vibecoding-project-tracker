@@ -10,20 +10,37 @@ export default function Login({ users, onSignIn }) {
   const [error, setError] = useState('');
   const emailRef = useRef(null);
   const switchRef = useRef(null);
+  const switchPointerActive = useRef(false);
   useEffect(() => {
+    let releaseTimer;
     function outside(event) {
-      if (!switchRef.current?.contains(event.target)) switchRef.current.open = false;
+      switchPointerActive.current = !!switchRef.current?.contains(event.target);
+      if (!switchPointerActive.current && switchRef.current) switchRef.current.open = false;
+    }
+    function releasePointer() {
+      // Keep the guard through pointerup/click, then resume normal focus dismissal.
+      window.clearTimeout(releaseTimer);
+      releaseTimer = window.setTimeout(() => { switchPointerActive.current = false; }, 0);
     }
     function escape(event) {
+      switchPointerActive.current = false;
       if (event.key === 'Escape' && switchRef.current?.open) {
         event.preventDefault();
         switchRef.current.open = false;
         switchRef.current.querySelector('summary').focus();
       }
     }
-    document.addEventListener('pointerdown', outside);
+    document.addEventListener('pointerdown', outside, true);
+    document.addEventListener('pointerup', releasePointer, true);
+    document.addEventListener('pointercancel', releasePointer, true);
     document.addEventListener('keydown', escape);
-    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+    return () => {
+      window.clearTimeout(releaseTimer);
+      document.removeEventListener('pointerdown', outside, true);
+      document.removeEventListener('pointerup', releasePointer, true);
+      document.removeEventListener('pointercancel', releasePointer, true);
+      document.removeEventListener('keydown', escape);
+    };
   }, []);
   function selectAccount(account) {
     setSelectedId(account.id); setEmail(account.email); setPassword(account.password); setError('');
@@ -44,8 +61,8 @@ export default function Login({ users, onSignIn }) {
       <h1 id="login-title" className="text-xl font-semibold">Sign in</h1>
     </header>
     <section aria-labelledby="login-title" className="w-full max-w-md rounded-xl border border-due-neutral bg-surface-card p-7 shadow-sm sm:p-10">
-      {/* Safari can blur with no relatedTarget before an account button's click. */}
-      <details ref={switchRef} onBlur={(event) => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} className="relative my-6">
+      {/* Internal pointer interactions must finish before blur can dismiss the choices. */}
+      <details ref={switchRef} onBlur={(event) => { if (!switchPointerActive.current && event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} className="relative my-6">
         <summary aria-label={`Switch account. Current account: ${selected?.name || 'None'}`} aria-controls="login-account-choices" className="mx-auto flex w-fit max-w-full cursor-pointer list-none flex-col items-center rounded-md px-3 py-2 text-center [&::-webkit-details-marker]:hidden">
           {selected?.avatarUrl ? <img src={selected.avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover"/> : <span aria-hidden="true" className="flex h-16 w-16 items-center justify-center rounded-full border border-due-neutral bg-surface-page text-xl font-semibold">{selected ? initials(selected.name) : '?'}</span>}
           <span className="mt-3 max-w-full break-words text-base font-semibold">{selected?.name}</span>
