@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authenticate, accessibleProjects, memberUsers, removeProjectMember, validateProfile, saveTaskRecord, taskMarkdown, milestoneProgress, CONTEXT_TEMPLATE, DEMO_LOGIN_IDS } from './model.js';
+import { authenticate, accessibleProjects, memberUsers, removeProjectMember, validateProfile, saveTaskRecord, taskMarkdown, milestoneProgress, CONTEXT_TEMPLATE, DEMO_LOGIN_IDS, assignmentFeedback } from './model.js';
 import { seedWorkspace, DEMO_PASSWORD } from './seedData.js';
 
 test('eight distinct A–H demo accounts sign in; invalid credentials do not', () => {
@@ -87,4 +87,12 @@ test('milestone progress handles empty, mixed and complete lists', () => {
   assert.deepEqual(milestoneProgress([]), { completed: 0, total: 0, percent: 0 });
   assert.deepEqual(milestoneProgress([{ completed: true }, { completed: false }, { completed: false }]), { completed: 1, total: 3, percent: 33 });
   assert.equal(milestoneProgress([{ completed: true }]).percent, 100);
+});
+test('assignment feedback identifies the task/new owner, unassignment and unchanged ownership', () => {
+  const { users } = seedWorkspace();
+  const before = { title: 'Review forms', assigneeUserId: 'demo-1' };
+  assert.equal(assignmentFeedback(before, { ...before, assigneeUserId: 'demo-2' }, users), 'Assigned “Review forms” to Ben Baker.');
+  assert.equal(assignmentFeedback(before, { ...before, assigneeUserId: null }, users), '“Review forms” is now unassigned.');
+  assert.equal(assignmentFeedback(before, before, users), '');
+  assert.equal(assignmentFeedback(null, { title: 'New task', assigneeUserId: null }, users), '');
 });

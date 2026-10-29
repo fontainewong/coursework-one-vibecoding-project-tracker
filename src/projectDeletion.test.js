@@ -28,9 +28,28 @@ test('A/B/C can see both sample projects, whose teams differ and all members hav
   for (const id of ['demo-1', 'demo-2', 'demo-3']) assert.equal(accessibleProjects(workspace, id).length, 2);
   assert.equal(accessibleProjects(workspace, 'demo-4').some((project) => project.id === 'demo-small-team'), false);
   for (const project of workspace.projects) {
+    assert.ok(project.memberUserIds.length <= 6);
+    assert.ok(workspace.users.some((user) => !project.memberUserIds.includes(user.id)), 'Add Member has an available user');
     for (const id of project.memberUserIds) assert.ok(project.tasks.some((task) => task.assigneeUserId === id), `${id} has tasks in ${project.name}`);
     for (const group of project.anchors) assert.equal(group.links[0].url, LIVE_DEMO_URL);
   }
+});
+test('revision 5 opens seed membership slots without deleting tasks or user records', () => {
+  const workspace = seedWorkspace();
+  workspace.schemaRevision = 5;
+  const project = workspace.projects[0];
+  project.memberUserIds = workspace.users.map((user) => user.id);
+  project.tasks.find((task) => task.id === 'demo-task-6').assigneeUserId = 'demo-5';
+  project.tasks.find((task) => task.id === 'demo-task-10').assigneeUserId = 'demo-8';
+  project.tasks.push({ id: 'custom-task', title: 'Keep custom notes', context: 'Keep this text', assigneeUserId: 'demo-8' });
+  const upgraded = upgradeWorkspace(workspace);
+  assert.equal(upgraded.users.length, 8);
+  assert.equal(upgraded.projects[0].memberUserIds.length, 6);
+  assert.equal(upgraded.projects[0].tasks.length, project.tasks.length);
+  assert.equal(upgraded.projects[0].tasks.find((task) => task.id === 'demo-task-6').assigneeUserId, 'demo-4');
+  assert.equal(upgraded.projects[0].tasks.find((task) => task.id === 'custom-task').context, 'Keep this text');
+  assert.equal(upgraded.projects[0].tasks.find((task) => task.id === 'custom-task').assigneeUserId, null);
+  assert.deepEqual(upgradeWorkspace(upgraded), upgraded);
 });
 test('seed enrichment runs once without replacing user links or resurrecting deleted examples', () => {
   const workspace = seedWorkspace();

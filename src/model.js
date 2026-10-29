@@ -52,6 +52,11 @@ export function saveTaskRecord(fields, previous, projectId, id, now = new Date()
 export function taskMarkdown(task) {
   return `# ${task.title.trim()}\n\n## Description\n\n${task.description || ''}\n\n## Context\n\n${task.context || ''}`;
 }
+export function assignmentFeedback(previous, saved, users) {
+  if ((previous?.assigneeUserId ?? null) === (saved.assigneeUserId ?? null)) return '';
+  const user = users.find((item) => item.id === saved.assigneeUserId);
+  return user ? `Assigned “${saved.title}” to ${user.name}.` : `“${saved.title}” is now unassigned.`;
+}
 export function milestoneProgress(milestones) {
   const completed = milestones.filter((item) => item.completed).length;
   return { completed, total: milestones.length, percent: milestones.length ? Math.round(completed / milestones.length * 100) : 0 };

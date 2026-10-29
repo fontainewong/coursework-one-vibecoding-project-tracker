@@ -11,10 +11,11 @@ import Login from './Login';
 import ProfileModal from './ProfileModal';
 import Milestones from './Milestones';
 import AssigneeBadge from './AssigneeBadge';
+import FeedbackNotice from './FeedbackNotice';
 import { getDeadline } from './deadline';
 import { filterTasks } from './taskFilters';
 import { loadWorkspace } from './storage.js';
-import { WORKSPACE_KEY, SESSION_KEY, STAGES, accessibleProjects, memberUsers, emptyLinks, saveTaskRecord, deleteProjectRecord, initials } from './model.js';
+import { WORKSPACE_KEY, SESSION_KEY, STAGES, accessibleProjects, memberUsers, emptyLinks, saveTaskRecord, deleteProjectRecord, initials, assignmentFeedback } from './model.js';
 
 const EMPTY_FILTERS = { search: '', assignee: '*', type: 'all', overdue: false };
 const control = 'min-h-11 rounded-md border border-due-neutral bg-surface-card px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary';
@@ -40,6 +41,11 @@ export default function App() {
   const [view, setView] = useState('board');
   const [feedback, setFeedback] = useState('');
   const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = window.setTimeout(() => setFeedback(''), 7000);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
   useEffect(() => {
     if (!resetRequested) return;
     try { window.sessionStorage.removeItem(SESSION_KEY); } catch { /* The in-memory session is already signed out. */ }
@@ -80,6 +86,7 @@ export default function App() {
   const visibleTasks = filterTasks(project?.tasks || [], filters, now);
   const hasFilters = filters.search !== '' || filters.assignee !== '*' || filters.type !== 'all' || filters.overdue;
   function updateProject(updated) {
+    setFeedback('');
     setWorkspace((current) => ({ ...current, projects: current.projects.map((item) => item.id === updated.id ? updated : item) }));
     if (filters.assignee !== '*' && filters.assignee !== '' && !updated.memberUserIds.includes(filters.assignee)) setFilters({ ...filters, assignee: '*' });
   }
@@ -95,10 +102,7 @@ export default function App() {
   function saveTask(fields) {
     const task = saveTaskRecord(fields, editing.task, project.id, crypto.randomUUID());
     updateProject({ ...project, tasks: editing.task ? project.tasks.map((item) => item.id === task.id ? task : item) : [...project.tasks, task] });
-    if ((editing.task?.assigneeUserId ?? null) !== task.assigneeUserId) {
-      const assignee = workspace.users.find((item) => item.id === task.assigneeUserId);
-      setFeedback(assignee ? `Task assigned to ${assignee.name}.` : 'Task is now unassigned.');
-    } else setFeedback(editing.task ? 'Task saved.' : 'Task created.');
+    setFeedback(assignmentFeedback(editing.task, task, workspace.users) || (editing.task ? 'Task saved.' : 'Task created.'));
     setEditing(null);
   }
   function deleteTask(id) { updateProject({ ...project, tasks: project.tasks.filter((item) => item.id !== id), milestones: project.milestones.map((item) => ({ ...item, taskIds: item.taskIds.filter((taskId) => taskId !== id) })) }); setEditing(null); setFeedback('Task deleted.'); }
@@ -111,7 +115,7 @@ export default function App() {
     setWorkspace((current) => ({ ...current, users: current.users.map((item) => item.id === user.id ? updated : item) }));
     setFeedback('Profile saved.');
   }
-  const editTask = (task) => setEditing({ task });
+  const editTask = (task) => { setFeedback(''); setEditing({ task }); };
   return <div className="min-h-screen bg-surface-page p-6 font-sans text-text-primary">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand-primary focus:px-4 focus:py-3 focus:text-white">Skip to content</a>
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -123,7 +127,7 @@ export default function App() {
     {storageError && <p role="alert" className="mb-4 rounded-lg border border-due-neutral bg-surface-card p-4 text-sm">{storageError}</p>}
     <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
     <div role="group" aria-label="Project views" className="flex flex-wrap items-center gap-2">
-      <button type="button" aria-label="Add task" title="Add task" disabled={!project} onClick={() => setEditing({ task: null })} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-primary text-white disabled:opacity-40"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" aria-label="Add task" title={['board', 'calendar'].includes(view) ? 'Add task' : 'Add task is available in Board and Calendar'} disabled={!project || !['board', 'calendar'].includes(view)} onClick={() => { setFeedback(''); setEditing({ task: null }); }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-primary text-white disabled:cursor-not-allowed disabled:opacity-40"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <span aria-hidden="true" className="mx-2 text-due-neutral">|</span>
       {['board', 'calendar', 'deliverables', 'milestones'].map((option) => <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)} className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium capitalize ${view === option ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card'}`}>{option}</button>)}
     </div>
@@ -136,7 +140,7 @@ export default function App() {
       <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={filters.overdue} onChange={(event) => setFilters({ ...filters, overdue: event.target.checked })} className="h-4 w-4 accent-brand-primary"/>Overdue only</label>
       <button type="button" disabled={!hasFilters} onClick={() => setFilters(EMPTY_FILTERS)} className={`${control} whitespace-nowrap disabled:opacity-40`}>Clear filters</button>
     </fieldset>
-    <p role="status" aria-live="polite" aria-atomic="true" className="mb-2 min-h-5 text-sm text-text-muted">{feedback}</p>
+    <FeedbackNotice message={feedback}/>
     <main id="main-content" tabIndex={-1} aria-label={view === 'board' ? 'Task board' : view} className="min-w-0 overflow-x-auto">
       {!project ? <p className="rounded-lg border border-dashed border-due-neutral p-6 text-sm text-text-muted">You have no projects yet. Use the project menu to create one.</p> : view === 'deliverables' ? <DeliverablesBoard key={project.id} anchors={project.anchors} onSave={saveAnchor}/> : view === 'milestones' ? <Milestones key={project.id} project={project} onUpdate={updateProject}/> : view === 'calendar' ? <TaskCalendar key={project.id} tasks={visibleTasks} users={workspace.users} today={now} onEdit={editTask}/> :
         <div className="grid w-full min-w-[960px] grid-cols-4 gap-6">{STAGES.map((stage) => {
@@ -154,8 +158,8 @@ export default function App() {
           </section>;
         })}</div>}
     </main>
-    {teamOpen && project && <TeamPanel project={project} users={workspace.users} currentUserId={user.id} now={now} onUpdate={updateProject} onClose={() => setTeamOpen(false)} onEditTask={editTask} onDelete={deleteProject}/>}
-    {selectedMember && <MemberView member={selectedMember} tasks={project.tasks} now={now} onClose={() => setMemberId(null)} onEditTask={editTask}/>}
+    {teamOpen && project && <TeamPanel project={project} users={workspace.users} currentUserId={user.id} now={now} onUpdate={updateProject} onClose={() => setTeamOpen(false)} onEditTask={editTask} onDelete={deleteProject} taskFeedback={feedback}/>}
+    {selectedMember && <MemberView member={selectedMember} tasks={project.tasks} now={now} onClose={() => setMemberId(null)} onEditTask={editTask} feedback={feedback}/>}
     {creatingProject && <CreateTeamModal onCreate={createProject} onClose={() => setCreatingProject(false)}/>}
     {profileOpen && <ProfileModal user={user} users={workspace.users} onSave={saveProfile} onClose={() => setProfileOpen(false)} onSignOut={signOut}/>}
     {editing && project && <TaskModal task={editing.task} stages={STAGES} team={members} onSave={saveTask} onDelete={deleteTask} onClose={() => setEditing(null)}/>}

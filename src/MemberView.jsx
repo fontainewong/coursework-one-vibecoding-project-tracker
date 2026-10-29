@@ -3,8 +3,9 @@ import { getDeadline } from './deadline';
 import { filterTasks } from './taskFilters';
 import useDialog from './useDialog.js';
 import AssigneeBadge from './AssigneeBadge';
+import FeedbackNotice from './FeedbackNotice';
 
-export default function MemberView({ member, tasks, now = new Date(), onClose, onEditTask }) {
+export default function MemberView({ member, tasks, now = new Date(), onClose, onEditTask, feedback }) {
   const ref = useDialog();
   const assigned = filterTasks(tasks, { assignee: member.id }, now);
   const stages = { todo: 'To Do', 'in-progress': 'In Progress', review: 'Review', done: 'Done' };
@@ -22,6 +23,7 @@ export default function MemberView({ member, tasks, now = new Date(), onClose, o
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
       </button>
     </header>
+      <FeedbackNotice inline message={feedback}/>
       <h3 className="mb-3 border-t border-due-neutral pt-5 text-sm font-semibold">Tasks</h3>
       {!assigned.length && <p className="rounded-md border border-dashed border-due-neutral p-4 text-sm text-text-muted">No tasks assigned to this member yet.</p>}
       <ul className="grid w-full grid-cols-1 items-stretch gap-4 sm:grid-cols-2">{assigned.map((task) => <li key={task.id} className="min-w-0">

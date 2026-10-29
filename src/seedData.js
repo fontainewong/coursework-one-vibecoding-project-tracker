@@ -23,13 +23,13 @@ export function demoProject(now = new Date()) {
     ['Review keyboard navigation', 'feature', 'review', 'demo-3', 0],
     ['Set up project workspace', 'feature', 'done', 'demo-1', -2],
     ['Add useful AI context', 'feature', 'todo', 'demo-4', 3],
-    ['Check form validation', 'bug', 'in-progress', 'demo-5', 7],
+    ['Check form validation', 'bug', 'in-progress', 'demo-4', 7],
     ['Plan the next review', 'feature', 'todo', null, null],
     ['Check task handoffs', 'feature', 'in-progress', 'demo-6', 4],
     ['Review calendar accessibility', 'feature', 'review', 'demo-7', 2],
-    ['Fix long task title wrapping', 'bug', 'todo', 'demo-8', 5],
+    ['Fix long task title wrapping', 'bug', 'todo', 'demo-6', 5],
   ];
-  return { id: projectId, name: 'Coursework Project', memberUserIds: demoUsers().map((user) => user.id),
+  return { id: projectId, name: 'Coursework Project', memberUserIds: ['demo-1', 'demo-2', 'demo-3', 'demo-4', 'demo-6', 'demo-7'],
     tasks: definitions.map(([title, type, status, assigneeUserId, offset], index) => ({
       id: `demo-task-${index + 1}`, projectId, title, type, status, assigneeUserId,
       description: 'A sample task for exploring the project tracker.', dueDate: offset === null ? null : date(offset),
@@ -55,5 +55,5 @@ export function smallTeamProject(now = new Date()) {
   };
 }
 export function seedWorkspace(now = new Date()) {
-  return { version: 2, schemaRevision: 5, users: demoUsers(), projects: [demoProject(now), smallTeamProject(now)], activeProjectId: 'demo-project' };
+  return { version: 2, schemaRevision: 6, users: demoUsers(), projects: [demoProject(now), smallTeamProject(now)], activeProjectId: 'demo-project' };
 }

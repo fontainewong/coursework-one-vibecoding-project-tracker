@@ -12,10 +12,14 @@ export function upgradeWorkspace(data) {
   const needsCoverageUpdate = (data.schemaRevision || 0) < 5;
   const hasSeedProject = projects.some((project) => ['demo-project', 'seed-demo-project'].includes(project.id));
   if (needsSeedUpdate && hasSeedProject && !projects.some((project) => project.id === 'demo-small-team')) projects.push(smallTeamProject());
-  return { ...data, schemaRevision: 5, users, projects: projects.map((project) => {
+  const needsTeamSpaceUpdate = (data.schemaRevision || 0) < 6;
+  return { ...data, schemaRevision: 6, users, projects: projects.map((project) => {
     const isPrimarySeed = ['demo-project', 'seed-demo-project'].includes(project.id);
     const isSmallSeed = project.id === 'demo-small-team';
-    const membership = needsCoverageUpdate && isSmallSeed ? [...new Set([...project.memberUserIds, 'demo-1', 'demo-2', 'demo-3'])] : project.memberUserIds;
+    let membership = needsCoverageUpdate && isSmallSeed ? [...new Set([...project.memberUserIds, 'demo-1', 'demo-2', 'demo-3'])] : project.memberUserIds;
+    if (needsTeamSpaceUpdate && (isPrimarySeed || isSmallSeed) && membership.length > 6) {
+      membership = isPrimarySeed ? membership.filter((id) => !['demo-5', 'demo-8'].includes(id)).slice(0, 6) : membership.slice(0, 6);
+    }
     const memberUserIds = membership.filter((id) => userIds.has(id));
     // Keep imported work accessible when all its old members were removed.
     if (!memberUserIds.length && project.memberUserIds.length) memberUserIds.push('demo-1');
@@ -25,7 +29,9 @@ export function upgradeWorkspace(data) {
       const newTaskIds = isSmallSeed ? ['small-task-4', 'small-task-5'] : ['demo-task-8', 'demo-task-9', 'demo-task-10'];
       sourceTasks.push(...example.tasks.filter((task) => newTaskIds.includes(task.id) && !sourceTasks.some((existing) => existing.id === task.id)).map((task) => ({ ...task, projectId: project.id })));
     }
-    const tasks = sourceTasks.map((task) => {
+    const tasks = sourceTasks.map((original) => {
+      const replacement = needsTeamSpaceUpdate && isPrimarySeed ? { 'demo-task-6': ['demo-5', 'demo-4'], 'demo-task-10': ['demo-8', 'demo-6'] }[original.id] : null;
+      const task = replacement && original.assigneeUserId === replacement[0] ? { ...original, assigneeUserId: replacement[1] } : original;
       const isSample = /^demo-task-\d+$/.test(task.id) || oldSamples.includes(task.id);
       const emptySample = (data.schemaRevision || 0) < 3 && isSample && (!task.context?.trim() || task.context === CONTEXT_TEMPLATE);
       return { ...task, assigneeUserId: userIds.has(task.assigneeUserId) && memberUserIds.includes(task.assigneeUserId) ? task.assigneeUserId : null,

@@ -3,12 +3,13 @@ import { isOverdue } from './taskFilters';
 import MemberView from './MemberView';
 import useDialog from './useDialog.js';
 import DeleteProjectModal from './DeleteProjectModal';
+import FeedbackNotice from './FeedbackNotice';
 import { initials, memberUsers, removeProjectMember } from './model.js';
 
 const button = 'min-h-11 rounded-md border border-due-neutral px-3 py-2 text-sm';
 const field = 'mt-1 min-h-11 w-full rounded-md border border-due-neutral bg-surface-card px-3 py-2';
 
-export default function TeamPanel({ project, users, currentUserId, now, onUpdate, onClose, onEditTask, onDelete }) {
+export default function TeamPanel({ project, users, currentUserId, now, onUpdate, onClose, onEditTask, onDelete, taskFeedback }) {
   const ref = useDialog();
   const selectRef = useRef(null);
   const addButton = useRef(null);
@@ -37,7 +38,7 @@ export default function TeamPanel({ project, users, currentUserId, now, onUpdate
   }
   return <dialog ref={ref} onCancel={(event) => { if (event.target !== event.currentTarget) return; event.preventDefault(); event.stopPropagation(); onClose(); }} aria-labelledby="team-panel-title" className="ml-auto mr-0 my-0 h-dvh max-h-dvh w-full max-w-md overflow-y-auto bg-surface-card p-6 text-text-primary shadow-xl backdrop:bg-black/50">
     <header className="mb-6 flex items-center justify-between gap-3"><div><h2 id="team-panel-title" className="text-lg font-semibold">Manage project</h2><p className="mt-1 break-words text-sm text-text-muted">{project.name}</p></div><button autoFocus type="button" onClick={onClose} className={button}>Close</button></header>
-    {selectedMember && <MemberView key={selectedMember.id} member={selectedMember} tasks={project.tasks} now={now} onClose={() => setViewing(null)} onEditTask={onEditTask}/>}
+    {selectedMember && <MemberView key={selectedMember.id} member={selectedMember} tasks={project.tasks} now={now} onClose={() => setViewing(null)} onEditTask={onEditTask} feedback={taskFeedback}/>}
     <form noValidate className="mb-6 rounded-lg border border-due-neutral p-4" onSubmit={(event) => {
       event.preventDefault();
       const name = projectName.trim();
@@ -58,7 +59,7 @@ export default function TeamPanel({ project, users, currentUserId, now, onUpdate
       {error && <p id="add-member-error" role="alert" className="mt-2 text-sm">{error}</p>}
       <div className="mt-3 flex gap-2"><button disabled={!available.length} className={`${button} bg-brand-primary text-white disabled:opacity-40`}>Add Member</button><button type="button" className={button} onClick={() => { setAdding(false); setError(''); addButton.current?.focus(); }}>Cancel</button></div>
     </form>}
-    <p role="status" aria-live="polite" aria-atomic="true" className="mb-3 text-sm text-text-muted">{feedback}</p>
+    <FeedbackNotice inline message={taskFeedback || feedback}/>
     <p className="mb-3 text-sm text-text-muted">{members.length} members</p>
     <ul className="space-y-3">{members.map((member) => <li key={member.id} className="rounded-lg border border-due-neutral p-4">
       <div className="flex items-center gap-3"><span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-page text-sm font-semibold">{initials(member.name)}</span>
