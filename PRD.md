@@ -174,7 +174,7 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - FR03 (MVP): The system shall display tasks on a Kanban board with To Do, In Progress, Review and Done columns, and allow users to change a task’s status.
 
-- FR04 (MVP): The system shall allow users to classify each task as a feature or a bug, shown with a distinct colour and icon.
+- FR04 (MVP): The system shall allow users to classify each task as a feature or a bug, shown with a distinct colour and icon, sorted by due date.
 
 - FR05 (MVP): The system shall allow users to assign, reassign or unassign tasks, display the assignee’s initials on each assigned task card, and provide feedback when the assignment changes.
 
@@ -200,7 +200,7 @@ The hackathon is "done" when all 13 milestone tags are pushed to your repo and v
 
 - FR16: The system shall allow users to edit their own name, email and GitHub username, while other members’ profiles are view-only. This was added because sign-in introduces personal accounts that users must maintain.
 
-- FR17 : The system shall allow users to create, rename, switch between and delete projects, each with its own tasks, milestones, deliverables and members. Deletion shall require confirmation and clearly identify the affected data.
+- FR17: The system shall allow users to create, rename, switch between and delete projects, each with its own tasks, milestones, deliverables and members. Deletion shall require confirmation and clearly identify the affected data.
 
 - FR18: The system shall display tasks in a monthly calendar by due date. This was added to give an overview of deadlines over time, supporting the brief’s aim of tracking tasks over time.
 
