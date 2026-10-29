@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { authenticate, DEMO_LOGIN_IDS, initials } from './model.js';
 
+// The demo account picker uses a native <select> so it works the same with
+// mouse, keyboard, screen readers and touch (including iOS Safari).
 export default function Login({ users, onSignIn }) {
   const accounts = DEMO_LOGIN_IDS.map((id) => users.find((user) => user.id === id)).filter(Boolean);
   const [selectedId, setSelectedId] = useState(accounts[0]?.id ?? '');
@@ -9,48 +11,16 @@ export default function Login({ users, onSignIn }) {
   const [password, setPassword] = useState(accounts[0]?.password ?? '');
   const [error, setError] = useState('');
   const emailRef = useRef(null);
-  const switchRef = useRef(null);
-  const switchPointerActive = useRef(false);
-  useEffect(() => {
-    let releaseTimer;
-    function outside(event) {
-      switchPointerActive.current = !!switchRef.current?.contains(event.target);
-      if (!switchPointerActive.current && switchRef.current) switchRef.current.open = false;
-    }
-    function releasePointer() {
-      // Keep the guard through pointerup/click, then resume normal focus dismissal.
-      window.clearTimeout(releaseTimer);
-      releaseTimer = window.setTimeout(() => { switchPointerActive.current = false; }, 0);
-    }
-    function escape(event) {
-      switchPointerActive.current = false;
-      if (event.key === 'Escape' && switchRef.current?.open) {
-        event.preventDefault();
-        switchRef.current.open = false;
-        switchRef.current.querySelector('summary').focus();
-      }
-    }
-    document.addEventListener('pointerdown', outside, true);
-    document.addEventListener('pointerup', releasePointer, true);
-    document.addEventListener('pointercancel', releasePointer, true);
-    document.addEventListener('keydown', escape);
-    return () => {
-      window.clearTimeout(releaseTimer);
-      document.removeEventListener('pointerdown', outside, true);
-      document.removeEventListener('pointerup', releasePointer, true);
-      document.removeEventListener('pointercancel', releasePointer, true);
-      document.removeEventListener('keydown', escape);
-    };
-  }, []);
-  function selectAccount(account) {
+  function selectAccount(id) {
+    const account = accounts.find((item) => item.id === id);
+    if (!account) return;
     setSelectedId(account.id); setEmail(account.email); setPassword(account.password); setError('');
-    switchRef.current.open = false; emailRef.current?.focus();
   }
   function submit(event) {
     event.preventDefault();
     if (!email.trim() || !password) { setError('Enter your email and password.'); emailRef.current?.focus(); return; }
     const user = authenticate(users, email, password);
-    if (!user) { setError('Email or password is incorrect. Select a demo account using Switch account.'); emailRef.current?.focus(); return; }
+    if (!user) { setError('Email or password is incorrect. Choose a demo account above to fill in its details.'); emailRef.current?.focus(); return; }
     onSignIn(user.id);
   }
   const field = 'mt-2 min-h-11 w-full rounded-md border border-due-neutral bg-surface-card px-3 py-2 text-base font-normal';
@@ -61,27 +31,19 @@ export default function Login({ users, onSignIn }) {
       <h1 id="login-title" className="text-xl font-semibold">Sign in</h1>
     </header>
     <section aria-labelledby="login-title" className="w-full max-w-md rounded-xl border border-due-neutral bg-surface-card p-7 shadow-sm sm:p-10">
-      {/* Internal pointer interactions must finish before blur can dismiss the choices. */}
-      <details ref={switchRef} onBlur={(event) => { if (!switchPointerActive.current && event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} className="relative my-6">
-        <summary aria-label={`Switch account. Current account: ${selected?.name || 'None'}`} aria-controls="login-account-choices" className="mx-auto flex w-fit max-w-full cursor-pointer list-none flex-col items-center rounded-md px-3 py-2 text-center [&::-webkit-details-marker]:hidden">
-          {selected?.avatarUrl ? <img src={selected.avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover"/> : <span aria-hidden="true" className="flex h-16 w-16 items-center justify-center rounded-full border border-due-neutral bg-surface-page text-xl font-semibold">{selected ? initials(selected.name) : '?'}</span>}
-          <span className="mt-3 max-w-full break-words text-base font-semibold">{selected?.name}</span>
-          <span className="mt-1 flex min-h-11 items-center text-base font-semibold underline underline-offset-4">Switch account</span>
-        </summary>
-        <div id="login-account-choices" className="absolute left-0 right-0 top-full z-10 mt-2 max-h-72 overflow-y-auto rounded-lg border border-due-neutral bg-surface-card p-2 shadow-lg">
-          <p className="px-3 py-2 text-base font-semibold">Choose an account</p>
-          <ul>{accounts.map((account) => <li key={account.id}>
-            <button type="button" onClick={() => selectAccount(account)} aria-current={account.id === selectedId ? 'true' : undefined} className="flex min-h-14 w-full items-center gap-3 rounded-md px-3 py-3 text-left hover:bg-surface-page">
-              <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-page text-base font-semibold">{initials(account.name)}</span>
-              <span className="min-w-0"><span className="block break-words text-base font-semibold">{account.name}</span><span className="mt-1 block break-all text-base text-text-muted">{account.email}</span></span>
-              {account.id === selectedId && <span className="ml-auto shrink-0 text-sm font-semibold text-text-muted">Selected</span>}
-            </button>
-          </li>)}</ul>
-        </div>
-      </details>
+      <div className="mb-6 flex flex-col items-center text-center">
+        {selected?.avatarUrl ? <img src={selected.avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover"/> : <span aria-hidden="true" className="flex h-16 w-16 items-center justify-center rounded-full border border-due-neutral bg-surface-page text-xl font-semibold">{selected ? initials(selected.name) : '?'}</span>}
+        <p className="mt-3 max-w-full break-words text-base font-semibold">{selected?.name}</p>
+      </div>
+      <label className="mb-6 block text-base font-semibold">Demo account
+        <select value={selectedId} onChange={(event) => selectAccount(event.target.value)} aria-describedby="demo-account-help" className={field}>
+          {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+        </select>
+        <span id="demo-account-help" className="mt-2 block text-sm font-normal text-text-muted">Choosing an account fills in its email and password.</span>
+      </label>
       <p role="status" aria-live="polite" className="sr-only">{selected?.name} selected. Email and password filled in.</p>
       <form noValidate onSubmit={submit} className="space-y-4">
-        <label className="block text-base font-semibold">Email (required)<input ref={emailRef} autoFocus required type="email" autoComplete="username" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} aria-invalid={!!error} aria-describedby={error ? 'login-error' : undefined} className={field}/></label>
+        <label className="block text-base font-semibold">Email (required)<input ref={emailRef} required type="email" autoComplete="username" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} aria-invalid={!!error} aria-describedby={error ? 'login-error' : undefined} className={field}/></label>
         <label className="block text-base font-semibold">Password (required)<input required type="password" autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} aria-invalid={!!error} aria-describedby={`demo-login-help${error ? ' login-error' : ''}`} className={field}/></label>
         <p id="demo-login-help" className="text-base text-text-muted">Demo password: <code className="font-mono">{selected?.password}</code></p>
         {error && <p id="login-error" role="alert" className="text-base">{error}</p>}
