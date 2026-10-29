@@ -44,7 +44,8 @@ export default function Login({ users, onSignIn }) {
       <h1 id="login-title" className="text-xl font-semibold">Sign in</h1>
     </header>
     <section aria-labelledby="login-title" className="w-full max-w-md rounded-xl border border-due-neutral bg-surface-card p-7 shadow-sm sm:p-10">
-      <details ref={switchRef} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} className="relative my-6">
+      {/* Safari can blur with no relatedTarget before an account button's click. */}
+      <details ref={switchRef} onBlur={(event) => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} className="relative my-6">
         <summary aria-label={`Switch account. Current account: ${selected?.name || 'None'}`} aria-controls="login-account-choices" className="mx-auto flex w-fit max-w-full cursor-pointer list-none flex-col items-center rounded-md px-3 py-2 text-center [&::-webkit-details-marker]:hidden">
           {selected?.avatarUrl ? <img src={selected.avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover"/> : <span aria-hidden="true" className="flex h-16 w-16 items-center justify-center rounded-full border border-due-neutral bg-surface-page text-xl font-semibold">{selected ? initials(selected.name) : '?'}</span>}
           <span className="mt-3 max-w-full break-words text-base font-semibold">{selected?.name}</span>
