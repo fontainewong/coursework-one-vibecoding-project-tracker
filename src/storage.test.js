@@ -64,7 +64,7 @@ test('explicit demo reset discards custom projects/profile edits but normal load
   const storage = memory({ [WORKSPACE_KEY]: JSON.stringify(initial) });
   assert.ok(loadWorkspace(storage).projects.some((project) => project.id === 'custom'));
   const fresh = loadWorkspace(storage, { resetDemo: true });
-  assert.equal(fresh.projects.length, 2);
+  assert.equal(fresh.projects.length, 3);
   assert.equal(fresh.projects[0].id, 'demo-project');
   assert.equal(fresh.users[0].name, 'Amy Anderson');
   assert.ok(fresh.projects[0].tasks.every((task) => task.context.includes('## Pick up')));

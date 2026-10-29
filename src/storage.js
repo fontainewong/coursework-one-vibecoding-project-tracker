@@ -1,5 +1,5 @@
 import { CONTEXT_TEMPLATE, WORKSPACE_KEY, emptyLinks } from './model.js';
-import { demoUsers, demoProject, seedWorkspace, sampleContext, smallTeamProject, demoLinks } from './seedData.js';
+import { demoUsers, demoProject, seedWorkspace, sampleContext, smallTeamProject, demoLinks, presentationProject } from './seedData.js';
 
 // Upgrade only old schema/demo defaults; never replace user-written task context.
 export function upgradeWorkspace(data) {
@@ -13,13 +13,17 @@ export function upgradeWorkspace(data) {
   const hasSeedProject = projects.some((project) => ['demo-project', 'seed-demo-project'].includes(project.id));
   if (needsSeedUpdate && hasSeedProject && !projects.some((project) => project.id === 'demo-small-team')) projects.push(smallTeamProject());
   const needsTeamSpaceUpdate = (data.schemaRevision || 0) < 6;
-  return { ...data, schemaRevision: 6, users, projects: projects.map((project) => {
+  const needsShowcaseUpdate = (data.schemaRevision || 0) < 7;
+  if (needsShowcaseUpdate && hasSeedProject && !projects.some((project) => project.id === 'demo-presentation')) projects.push(presentationProject());
+  return { ...data, schemaRevision: 7, users, projects: projects.map((project) => {
     const isPrimarySeed = ['demo-project', 'seed-demo-project'].includes(project.id);
     const isSmallSeed = project.id === 'demo-small-team';
     let membership = needsCoverageUpdate && isSmallSeed ? [...new Set([...project.memberUserIds, 'demo-1', 'demo-2', 'demo-3'])] : project.memberUserIds;
     if (needsTeamSpaceUpdate && (isPrimarySeed || isSmallSeed) && membership.length > 6) {
       membership = isPrimarySeed ? membership.filter((id) => !['demo-5', 'demo-8'].includes(id)).slice(0, 6) : membership.slice(0, 6);
     }
+    if (needsShowcaseUpdate && isPrimarySeed) membership = membership.filter((id) => id !== 'demo-3');
+    if (needsShowcaseUpdate && isSmallSeed) membership = membership.filter((id) => id !== 'demo-2');
     const memberUserIds = membership.filter((id) => userIds.has(id));
     // Keep imported work accessible when all its old members were removed.
     if (!memberUserIds.length && project.memberUserIds.length) memberUserIds.push('demo-1');
@@ -31,7 +35,9 @@ export function upgradeWorkspace(data) {
     }
     const tasks = sourceTasks.map((original) => {
       const replacement = needsTeamSpaceUpdate && isPrimarySeed ? { 'demo-task-6': ['demo-5', 'demo-4'], 'demo-task-10': ['demo-8', 'demo-6'] }[original.id] : null;
-      const task = replacement && original.assigneeUserId === replacement[0] ? { ...original, assigneeUserId: replacement[1] } : original;
+      let task = replacement && original.assigneeUserId === replacement[0] ? { ...original, assigneeUserId: replacement[1] } : original;
+      if (needsShowcaseUpdate && isPrimarySeed && task.id === 'demo-task-3' && task.assigneeUserId === 'demo-3') task = { ...task, assigneeUserId: 'demo-1' };
+      if (needsShowcaseUpdate && isSmallSeed && task.id === 'small-task-1' && task.assigneeUserId === 'demo-2') task = { ...task, assigneeUserId: 'demo-3' };
       const isSample = /^demo-task-\d+$/.test(task.id) || oldSamples.includes(task.id);
       const emptySample = (data.schemaRevision || 0) < 3 && isSample && (!task.context?.trim() || task.context === CONTEXT_TEMPLATE);
       return { ...task, assigneeUserId: userIds.has(task.assigneeUserId) && memberUserIds.includes(task.assigneeUserId) ? task.assigneeUserId : null,
@@ -41,9 +47,15 @@ export function upgradeWorkspace(data) {
       const old = project.anchors?.find((item) => item.id === definition.id || item.type === definition.type);
       let links = old?.links?.length ? old.links : (old?.url ? [{ id: `imported-link:${project.id}:${definition.id}`, title: definition.label, url: old.url }] : []);
       if (needsCoverageUpdate && (isPrimarySeed || isSmallSeed) && !links.length) links = demoLinks(project.id).find((group) => group.type === definition.type).links;
+      if (needsShowcaseUpdate && (isPrimarySeed || isSmallSeed) && ['report', 'documentation'].includes(definition.type)) links = links.filter((link) => !link.id?.startsWith('seed-live-demo:') || link.url !== 'https://coursework-one-vibecoding-project-t.vercel.app/');
       return { ...definition, links: links.map((link) => ({ ...link, projectId: project.id, type: definition.type })) };
     });
-    return { ...project, memberUserIds, tasks, anchors, milestones: (project.milestones || []).map((item) => ({ ...item, projectId: project.id,
+    const milestones = [...(project.milestones || [])];
+    if (needsShowcaseUpdate && (isPrimarySeed || isSmallSeed)) {
+      const example = isSmallSeed ? smallTeamProject() : demoProject();
+      milestones.push(...example.milestones.slice(1).filter((item) => !milestones.some((existing) => existing.id === item.id)));
+    }
+    return { ...project, memberUserIds, tasks, anchors, milestones: milestones.map((item) => ({ ...item, projectId: project.id,
       description: item.description || '', taskIds: (item.taskIds || []).filter((id) => tasks.some((task) => task.id === id)) })) };
   }) };
 }

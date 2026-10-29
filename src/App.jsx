@@ -15,6 +15,7 @@ import FeedbackNotice from './FeedbackNotice';
 import { getDeadline } from './deadline';
 import { filterTasks } from './taskFilters';
 import { loadWorkspace } from './storage.js';
+import { defaultProjectId } from './seedData.js';
 import { WORKSPACE_KEY, SESSION_KEY, STAGES, accessibleProjects, memberUsers, emptyLinks, saveTaskRecord, deleteProjectRecord, initials, assignmentFeedback } from './model.js';
 
 const EMPTY_FILTERS = { search: '', assignee: '*', type: 'all', overdue: false };
@@ -67,6 +68,7 @@ export default function App() {
   function closeViews() { setTeamOpen(false); setMemberId(null); setCreatingProject(false); setProfileOpen(false); setEditing(null); setFilters(EMPTY_FILTERS); setView('board'); setFeedback(''); }
   function signIn(id) {
     closeViews(); setSessionId(id);
+    setWorkspace((current) => ({ ...current, activeProjectId: defaultProjectId(current, id) }));
     try { window.sessionStorage.setItem(SESSION_KEY, id); } catch { /* The session can still work until reload. */ }
   }
   function signOut() {
@@ -127,7 +129,7 @@ export default function App() {
     {storageError && <p role="alert" className="mb-4 rounded-lg border border-due-neutral bg-surface-card p-4 text-sm">{storageError}</p>}
     <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
     <div role="group" aria-label="Project views" className="flex flex-wrap items-center gap-2">
-      <button type="button" aria-label="Add task" title={['board', 'calendar'].includes(view) ? 'Add task' : 'Add task is available in Board and Calendar'} disabled={!project || !['board', 'calendar'].includes(view)} onClick={() => { setFeedback(''); setEditing({ task: null }); }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-primary text-white disabled:cursor-not-allowed disabled:opacity-40"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" aria-label="Add task" title={view === 'board' ? 'Add task' : 'Add task is available in Board'} disabled={!project || view !== 'board'} onClick={() => { setFeedback(''); setEditing({ task: null }); }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-primary text-white disabled:cursor-not-allowed disabled:opacity-40"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <span aria-hidden="true" className="mx-2 text-due-neutral">|</span>
       {['board', 'calendar', 'deliverables', 'milestones'].map((option) => <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)} className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium capitalize ${view === option ? 'border-brand-primary bg-brand-primary text-white' : 'border-due-neutral bg-surface-card'}`}>{option}</button>)}
     </div>

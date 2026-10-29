@@ -5,7 +5,7 @@ import useDialog from './useDialog.js';
 const button = 'min-h-11 rounded-md border border-due-neutral px-4 py-2 text-sm';
 const field = 'mt-1 min-h-11 w-full rounded-md border border-due-neutral px-3 py-2';
 
-function MilestoneModal({ milestone, project, onSave, onClose }) {
+function MilestoneModal({ milestone, project, onSave, onDelete, onClose }) {
   const ref = useDialog();
   const [draft, setDraft] = useState({ title: milestone?.title || '', description: milestone?.description || '', targetDate: milestone?.targetDate || '', taskIds: milestone?.taskIds || [] });
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ function MilestoneModal({ milestone, project, onSave, onClose }) {
           </label>)}</div>
         </fieldset>
       </div>
-      <div className="mt-6 flex justify-end gap-2"><button type="button" className={button} onClick={onClose}>Cancel</button><button className={`${button} bg-brand-primary text-white`}>{milestone ? 'Save changes' : 'Create milestone'}</button></div>
+      <div className="mt-6 flex flex-wrap justify-end gap-2">{milestone && <button type="button" className={`${button} mr-auto`} onClick={() => onDelete(milestone)}>Delete milestone</button>}<button type="button" className={button} onClick={onClose}>Cancel</button><button className={`${button} bg-brand-primary text-white`}>{milestone ? 'Save changes' : 'Create milestone'}</button></div>
     </form>
   </dialog>;
 }
@@ -52,8 +52,8 @@ export default function Milestones({ project, onUpdate }) {
     {!project.milestones.length && <p className="rounded-lg border border-dashed border-due-neutral p-6 text-sm text-text-muted">No milestones yet. Add one to start tracking progress.</p>}
     <ul className="space-y-3">{project.milestones.map((item) => {
       const related = project.tasks.filter((task) => item.taskIds.includes(task.id));
-      return <li key={item.id} className="overflow-hidden rounded-lg border border-due-neutral">
-        <button type="button" aria-label={`Edit milestone: ${item.title}`} onClick={() => setEditing({ milestone: item })} className="block w-full p-4 text-left hover:bg-surface-page">
+      return <li key={item.id} className="rounded-lg border border-due-neutral">
+        <button type="button" aria-label={`Edit milestone: ${item.title}`} onClick={() => setEditing({ milestone: item })} className="block w-full rounded-t-lg p-4 text-left hover:bg-surface-page">
           <span className="flex items-start justify-between gap-3"><span className="min-w-0 break-words font-medium">{item.title}</span><span className="shrink-0 text-xs text-text-muted">Edit</span></span>
           {item.description && <span className="mt-2 block whitespace-pre-wrap break-words text-sm text-text-muted">{item.description}</span>}
           <span className="mt-3 block text-xs">{item.completed ? 'Complete' : 'Not complete'} · {item.targetDate ? `Target: ${item.targetDate}` : 'No target date'}</span>
@@ -64,6 +64,6 @@ export default function Milestones({ project, onUpdate }) {
         <label className="flex min-h-11 items-center gap-2 border-t border-due-neutral px-4 py-2 text-sm"><input type="checkbox" checked={item.completed} onChange={(event) => { onUpdate({ ...project, milestones: project.milestones.map((milestone) => milestone.id === item.id ? { ...milestone, completed: event.target.checked } : milestone) }); setFeedback(`${item.title} marked ${event.target.checked ? 'complete' : 'incomplete'}.`); }} className="h-4 w-4 accent-brand-primary"/>Mark {item.title} complete</label>
       </li>;
     })}</ul>
-    {editing && <MilestoneModal milestone={editing.milestone} project={project} onSave={save} onClose={() => setEditing(null)}/>}
+    {editing && <MilestoneModal milestone={editing.milestone} project={project} onSave={save} onDelete={(milestone) => { onUpdate({ ...project, milestones: project.milestones.filter((item) => item.id !== milestone.id) }); setEditing(null); setFeedback('Milestone deleted.'); }} onClose={() => setEditing(null)}/>}
   </section>;
 }

@@ -10,6 +10,11 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Validation errors remain explicit text as well as using a contrasting colour. */
+[role="alert"] {
+  @apply text-red-700;
+}
+
 :where(button, input, select, textarea, summary, a):focus-visible {
   outline: 2px solid #1D1D1F;
   outline-offset: 3px;

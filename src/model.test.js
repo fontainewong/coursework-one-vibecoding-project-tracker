@@ -18,11 +18,11 @@ test('eight distinct A–H demo accounts sign in; invalid credentials do not', (
 test('project visibility is limited to memberships, including after removal', () => {
   const workspace = seedWorkspace();
   workspace.projects.push({ id: 'private', memberUserIds: ['demo-1'], tasks: [] });
-  assert.deepEqual(accessibleProjects(workspace, 'demo-2').map((project) => project.id), ['demo-project', 'demo-small-team']);
+  assert.deepEqual(accessibleProjects(workspace, 'demo-2').map((project) => project.id), ['demo-project', 'demo-presentation']);
   assert.equal(accessibleProjects(workspace, null).length, 0);
   const project = removeProjectMember(workspace.projects[0], 'demo-2');
   workspace.projects[0] = project;
-  assert.deepEqual(accessibleProjects(workspace, 'demo-2').map((project) => project.id), ['demo-small-team']);
+  assert.deepEqual(accessibleProjects(workspace, 'demo-2').map((project) => project.id), ['demo-presentation']);
 });
 test('A–C are the three offered demo logins and each can access seeded project data', () => {
   const workspace = seedWorkspace();

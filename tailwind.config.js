@@ -12,7 +12,7 @@ export default {
         'surface-page': '#F5F5F7',
         'surface-card': '#FFFFFF',
         'text-primary': '#1D1D1F',
-        'text-muted': '#6E6E73',
+        'text-muted': '#52525B',
         'type-feature': '#28C840',
         'type-bug': '#FF5F57',
         'due-safe': '#28C840',
